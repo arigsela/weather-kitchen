@@ -19,6 +19,7 @@ from app.middleware import (
     RequestIDMiddleware,
     RequestLoggingMiddleware,
 )
+from app.api.v1.router import router as v1_router
 
 # Configure logging
 logging.basicConfig(
@@ -72,6 +73,9 @@ def create_app() -> FastAPI:
     app.add_middleware(RequestIDMiddleware)
     # Security headers on every response
     app.add_middleware(SecurityHeadersMiddleware)
+
+    # Include API routers
+    app.include_router(v1_router)
 
     # Health check endpoint
     @app.get("/health", tags=["Health"])

@@ -1,0 +1,281 @@
+[
+  {
+    "name": "Sunny Pasta Primavera",
+    "emoji": "☀️",
+    "why": "Light and fresh for sunny days",
+    "tip": "Use fresh basil and high-quality olive oil",
+    "weather": "sunny",
+    "category": "lunch",
+    "serves": 4,
+    "version_added": "2.0.0",
+    "ingredients": [
+      "400g pasta",
+      "2 cups fresh vegetables",
+      "3 cloves garlic",
+      "4 tablespoons olive oil",
+      "Salt and pepper to taste"
+    ],
+    "steps": [
+      "Boil pasta according to package directions",
+      "Heat olive oil in a large pan",
+      "Sauté garlic until fragrant",
+      "Add fresh vegetables and cook until tender-crisp",
+      "Combine cooked pasta with vegetables",
+      "Season with salt and pepper and serve"
+    ],
+    "tags": ["vegetarian", "quick", "italian"]
+  },
+  {
+    "name": "Rainy Day Comfort Soup",
+    "emoji": "🌧️",
+    "why": "Warm and comforting for rainy weather",
+    "tip": "Make extra for leftovers",
+    "weather": "rainy",
+    "category": "dinner",
+    "serves": 6,
+    "version_added": "2.0.0",
+    "ingredients": [
+      "8 cups chicken or vegetable broth",
+      "2 carrots, diced",
+      "2 celery stalks, diced",
+      "1 onion, chopped",
+      "3 cups cooked chicken or beans",
+      "2 bay leaves",
+      "Salt and pepper to taste"
+    ],
+    "steps": [
+      "Heat broth in a large pot",
+      "Add chopped onion, carrots, and celery",
+      "Bring to a boil and simmer for 10 minutes",
+      "Add cooked chicken or beans",
+      "Add bay leaves and season to taste",
+      "Simmer for 15 more minutes and serve"
+    ],
+    "tags": ["warm", "comfort", "protein-packed"]
+  },
+  {
+    "name": "Snowy Day Hot Chocolate",
+    "emoji": "❄️",
+    "why": "Warm treat for cold snowy days",
+    "tip": "Top with marshmallows for extra fun",
+    "weather": "snowy",
+    "category": "snack",
+    "serves": 4,
+    "version_added": "2.0.0",
+    "ingredients": [
+      "4 cups whole milk",
+      "4 tablespoons cocoa powder",
+      "3 tablespoons sugar",
+      "1 teaspoon vanilla extract",
+      "Marshmallows (optional)"
+    ],
+    "steps": [
+      "Pour milk into a saucepan",
+      "Heat over medium heat (do not boil)",
+      "Mix cocoa powder and sugar in a bowl",
+      "Whisk cocoa mixture into hot milk",
+      "Add vanilla extract",
+      "Pour into mugs and top with marshmallows if desired"
+    ],
+    "tags": ["sweet", "warm", "quick"]
+  },
+  {
+    "name": "Windy Day Pizza",
+    "emoji": "🌪️",
+    "why": "Hearty meal for blustery days",
+    "tip": "Use pre-made dough to save time",
+    "weather": "windy",
+    "category": "lunch",
+    "serves": 4,
+    "version_added": "2.0.0",
+    "ingredients": [
+      "1 pizza dough",
+      "1 cup tomato sauce",
+      "2 cups mozzarella cheese",
+      "Toppings of choice (pepperoni, vegetables, etc.)",
+      "Olive oil"
+    ],
+    "steps": [
+      "Preheat oven to 450°F",
+      "Stretch pizza dough on a baking sheet",
+      "Spread tomato sauce on dough",
+      "Add cheese and toppings",
+      "Bake for 12-15 minutes until crust is golden",
+      "Cut into slices and serve"
+    ],
+    "tags": ["fun", "customizable", "popular"]
+  },
+  {
+    "name": "Cloudy Day Pancakes",
+    "emoji": "☁️",
+    "why": "Cozy breakfast for gray days",
+    "tip": "Make them extra fluffy by not overmixing the batter",
+    "weather": "cloudy",
+    "category": "breakfast",
+    "serves": 3,
+    "version_added": "2.0.0",
+    "ingredients": [
+      "1 cup flour",
+      "2 tablespoons sugar",
+      "2 teaspoons baking powder",
+      "1/2 teaspoon salt",
+      "1 cup milk",
+      "1 egg",
+      "2 tablespoons butter, melted"
+    ],
+    "steps": [
+      "Mix dry ingredients in a bowl",
+      "Whisk together milk, egg, and melted butter",
+      "Combine wet and dry ingredients (don't overmix)",
+      "Heat griddle or pan over medium-high heat",
+      "Pour batter and cook until bubbles form",
+      "Flip and cook until golden",
+      "Serve with syrup and toppings"
+    ],
+    "tags": ["breakfast", "comfort", "classic"]
+  },
+  {
+    "name": "Tropical Smoothie Bowl",
+    "emoji": "🥝",
+    "why": "Refreshing for warm sunny days",
+    "tip": "Use frozen fruit for a thicker consistency",
+    "weather": "sunny",
+    "category": "breakfast",
+    "serves": 2,
+    "version_added": "2.0.0",
+    "ingredients": [
+      "2 cups frozen tropical fruit",
+      "1 cup yogurt",
+      "1/2 cup milk",
+      "Granola for topping",
+      "Fresh fruit for garnish",
+      "Coconut flakes (optional)"
+    ],
+    "steps": [
+      "Blend frozen fruit with yogurt and milk until thick",
+      "Pour into bowls",
+      "Top with granola, fresh fruit, and coconut flakes",
+      "Serve immediately with a spoon"
+    ],
+    "tags": ["healthy", "tropical", "quick"]
+  },
+  {
+    "name": "Cozy Bean Chili",
+    "emoji": "🌶️",
+    "why": "Hearty and warming for cool days",
+    "tip": "Let it simmer longer for deeper flavors",
+    "weather": "rainy",
+    "category": "dinner",
+    "serves": 6,
+    "version_added": "2.0.0",
+    "ingredients": [
+      "2 cans beans (any variety)",
+      "2 cans diced tomatoes",
+      "1 onion, diced",
+      "2 cloves garlic, minced",
+      "2 tablespoons chili powder",
+      "1 tablespoon cumin",
+      "Salt and pepper to taste",
+      "Optional toppings: cheese, sour cream, green onions"
+    ],
+    "steps": [
+      "Heat oil in a large pot",
+      "Sauté onion and garlic",
+      "Add chili powder and cumin, stir for 1 minute",
+      "Add beans and tomatoes",
+      "Bring to a boil, then simmer for 20 minutes",
+      "Season with salt and pepper",
+      "Serve with desired toppings"
+    ],
+    "tags": ["comfort", "vegetarian", "one-pot"]
+  },
+  {
+    "name": "Garden Salad",
+    "emoji": "🥗",
+    "why": "Fresh and light for sunny days",
+    "tip": "Dress just before serving to keep greens crisp",
+    "weather": "sunny",
+    "category": "lunch",
+    "serves": 2,
+    "version_added": "2.0.0",
+    "ingredients": [
+      "4 cups mixed greens",
+      "1 cup cherry tomatoes",
+      "1 cucumber, sliced",
+      "1 bell pepper, diced",
+      "1/2 cup nuts or seeds",
+      "3 tablespoons olive oil",
+      "1 tablespoon vinegar",
+      "Salt and pepper"
+    ],
+    "steps": [
+      "Wash and dry the greens",
+      "Chop all vegetables",
+      "Combine greens and vegetables in a large bowl",
+      "Whisk together oil, vinegar, salt, and pepper",
+      "Dress salad just before serving",
+      "Top with nuts or seeds and serve"
+    ],
+    "tags": ["healthy", "vegetarian", "gluten-free"]
+  },
+  {
+    "name": "Baked Mac and Cheese",
+    "emoji": "🧀",
+    "why": "Classic comfort for any day",
+    "tip": "Use a mix of cheeses for better flavor",
+    "weather": "cloudy",
+    "category": "dinner",
+    "serves": 4,
+    "version_added": "2.0.0",
+    "ingredients": [
+      "1 pound pasta",
+      "4 tablespoons butter",
+      "3 tablespoons flour",
+      "3 cups milk",
+      "3 cups cheese, shredded",
+      "1 teaspoon dry mustard",
+      "Salt and pepper",
+      "1/2 cup breadcrumbs"
+    ],
+    "steps": [
+      "Preheat oven to 350°F",
+      "Cook pasta until al dente",
+      "Make roux with butter and flour",
+      "Add milk and whisk until smooth",
+      "Stir in cheese and mustard",
+      "Combine pasta with sauce",
+      "Pour into baking dish, top with breadcrumbs",
+      "Bake for 25-30 minutes until golden"
+    ],
+    "tags": ["comfort", "cheesy", "family-favorite"]
+  },
+  {
+    "name": "Fish Tacos",
+    "emoji": "🌮",
+    "why": "Light and fun for any day",
+    "tip": "Use fresh fish from the market if possible",
+    "weather": "sunny",
+    "category": "lunch",
+    "serves": 4,
+    "version_added": "2.0.0",
+    "ingredients": [
+      "1 pound white fish",
+      "Taco shells or tortillas",
+      "Shredded cabbage",
+      "Lime wedges",
+      "Cilantro",
+      "Salsa",
+      "Avocado",
+      "Crema or sour cream"
+    ],
+    "steps": [
+      "Season fish with salt, pepper, and spices",
+      "Pan-fry or grill fish until cooked through",
+      "Flake fish into bite-sized pieces",
+      "Warm tortillas or shells",
+      "Assemble tacos with fish and desired toppings",
+      "Serve with lime wedges and salsa"
+    ],
+    "tags": ["seafood", "mexican", "quick"]
+  }
+]

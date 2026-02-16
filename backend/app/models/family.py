@@ -4,7 +4,7 @@ Family model - family account with authentication and COPPA compliance.
 
 import uuid
 from datetime import datetime, timezone
-from sqlalchemy import Column, String, Integer, Boolean, DateTime, Index, ForeignKey
+from sqlalchemy import Column, String, Integer, Boolean, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
 
 from app.models.base import DeclarativeBase, UUIDMixin, TimestampMixin
@@ -18,9 +18,6 @@ class Family(DeclarativeBase):
     """
 
     __tablename__ = "families"
-    __table_args__ = (
-        Index("ix_families_api_token_hash", "api_token_hash", unique=True),
-    )
 
     # UUID primary key
     id = Column(GUID, primary_key=True, default=uuid.uuid4, nullable=False)
