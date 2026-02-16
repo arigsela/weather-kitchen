@@ -3,7 +3,7 @@ User models: User, UserIngredient, UserFavorite.
 """
 
 import uuid
-from sqlalchemy import Column, String, Boolean, ForeignKey, DateTime, Index
+from sqlalchemy import Column, String, Boolean, Integer, ForeignKey, DateTime, Index
 from sqlalchemy.orm import relationship
 
 from app.models.base import DeclarativeBase, UUIDMixin, TimestampMixin
@@ -26,7 +26,8 @@ class User(DeclarativeBase):
 
     # User data
     name = Column(String(50), nullable=False)
-    emoji = Column(String(2), nullable=False)
+    age = Column(Integer, nullable=True)  # Optional age for COPPA tracking
+    emoji = Column(String(2), nullable=True, default="👤")  # Optional emoji, defaults to person
     is_active = Column(Boolean, default=True, nullable=False)
 
     # Relationships
@@ -47,7 +48,7 @@ class UserIngredient(DeclarativeBase):
 
     __tablename__ = "user_ingredients"
     __table_args__ = (
-        Index("ix_user_ingredients", "user_id", "tag", unique=True),
+        Index("ix_user_ingredients", "user_id", "ingredient_name", unique=True),
     )
 
     # UUID primary key
@@ -57,14 +58,15 @@ class UserIngredient(DeclarativeBase):
     user_id = Column(GUID, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
 
     # Data (normalized lowercase)
-    tag = Column(String(50), nullable=False)
-    added_at = Column(DateTime, default=lambda: __import__('datetime').datetime.now(__import__('datetime').timezone.utc), nullable=False)
+    ingredient_name = Column(String(50), nullable=False)
+    created_at = Column(DateTime, default=lambda: __import__('datetime').datetime.now(__import__('datetime').timezone.utc), nullable=False)
+    updated_at = Column(DateTime, default=lambda: __import__('datetime').datetime.now(__import__('datetime').timezone.utc), nullable=False)
 
     # Relationship
     user = relationship("User", back_populates="ingredients")
 
     def __repr__(self):
-        return f"<UserIngredient {self.tag}>"
+        return f"<UserIngredient {self.ingredient_name}>"
 
 
 class UserFavorite(DeclarativeBase):
@@ -83,7 +85,7 @@ class UserFavorite(DeclarativeBase):
     recipe_id = Column(GUID, ForeignKey("recipes.id", ondelete="CASCADE"), nullable=False)
 
     # Data
-    favorited_at = Column(DateTime, default=lambda: __import__('datetime').datetime.now(__import__('datetime').timezone.utc), nullable=False)
+    added_at = Column(DateTime, default=lambda: __import__('datetime').datetime.now(__import__('datetime').timezone.utc), nullable=False)
 
     # Relationships
     user = relationship("User", back_populates="favorites")
