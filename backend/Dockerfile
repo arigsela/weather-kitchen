@@ -2,7 +2,7 @@
 # Stage 1: Builder
 FROM python:3.12-slim as builder
 
-WORKDIR /tmp
+WORKDIR /build
 
 # Install build dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -10,26 +10,22 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy project files
-COPY pyproject.toml uv.lock* ./
-COPY app app/
+COPY pyproject.toml ./
+COPY app ./app
 
-# Install uv and dependencies
-RUN pip install --no-cache-dir uv && \
-    uv pip install --python /usr/local/bin/python3.12 \
-    --target /tmp/packages \
-    --compile-bytecode \
-    -r /dev/stdin << EOF
-fastapi>=0.129.0
-uvicorn[standard]>=0.40.0
-python-multipart>=0.0.22
-sqlalchemy[asyncio]>=2.0.46
-alembic>=1.18.4
-pydantic>=2.12
-pydantic-settings>=2.0
-email-validator>=2.0
-bcrypt>=5.0.0
-gunicorn>=23.0.0
-EOF
+# Install dependencies
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
+    pip install --no-cache-dir --target /build/packages \
+    fastapi==0.129.0 \
+    uvicorn[standard]==0.40.0 \
+    python-multipart==0.0.22 \
+    sqlalchemy[asyncio]==2.0.46 \
+    alembic==1.18.4 \
+    pydantic==2.12.5 \
+    pydantic-settings==2.5.0 \
+    email-validator==2.3.0 \
+    bcrypt==5.0.0 \
+    gunicorn==23.0.0
 
 # Stage 2: Runtime
 FROM python:3.12-slim
@@ -45,11 +41,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN groupadd -r appuser && useradd -r -g appuser appuser
 
 # Copy packages from builder
-COPY --from=builder /tmp/packages /usr/local/lib/python3.12/site-packages
+COPY --from=builder /build/packages /usr/local/lib/python3.12/site-packages
 
 # Copy application code
-COPY app app/
-COPY alembic alembic/
+COPY --from=builder /build/app ./app
+COPY alembic ./alembic
 COPY alembic.ini .
 
 # Create directory for database (if using SQLite)

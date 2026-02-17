@@ -5,7 +5,7 @@ FastAPI dependency injection for authentication and authorization.
 import hashlib
 from datetime import datetime, timezone
 from uuid import UUID
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, Header, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -39,7 +39,7 @@ def hash_token(token: str) -> str:
 
 
 async def get_current_family(
-    authorization: str | None = None,
+    authorization: str | None = Header(None),
     db: Session = Depends(get_db),
 ) -> Family:
     """
