@@ -18,6 +18,7 @@ from app.middleware import (
     ErrorHandlerMiddleware,
     RequestIDMiddleware,
     RequestLoggingMiddleware,
+    RateLimiterMiddleware,
 )
 from app.api.v1.router import router as v1_router
 
@@ -65,14 +66,17 @@ def create_app() -> FastAPI:
     )
 
     # Add custom middleware (order matters - reverse registration order)
+    # Execution order: request_id → security_headers → rate_limit → request_logging → error_handler
     # Error handler should be first to catch all exceptions
     app.add_middleware(ErrorHandlerMiddleware)
-    # Request logging should be early to log all requests
+    # Request logging should log all requests
     app.add_middleware(RequestLoggingMiddleware)
-    # Request ID should be early to track requests
-    app.add_middleware(RequestIDMiddleware)
+    # Rate limiter should check limits before processing
+    app.add_middleware(RateLimiterMiddleware)
     # Security headers on every response
     app.add_middleware(SecurityHeadersMiddleware)
+    # Request ID should be early to track requests
+    app.add_middleware(RequestIDMiddleware)
 
     # Include API routers
     app.include_router(v1_router)
