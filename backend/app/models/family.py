@@ -1,5 +1,5 @@
 """
-Family model - family account with authentication and COPPA compliance.
+Family model - family account with JWT authentication and PIN for sensitive operations.
 """
 
 import uuid
@@ -14,7 +14,8 @@ from app.database import GUID
 class Family(DeclarativeBase):
     """
     Family entity - represents a family account.
-    Includes API token hash for bearer authentication and PIN hash for sensitive operations.
+    Authenticates via JWT (access + refresh tokens).
+    PIN hash used for sensitive operations (rotate, purge).
     """
 
     __tablename__ = "families"
@@ -24,33 +25,18 @@ class Family(DeclarativeBase):
 
     # Core family data
     name = Column(String(100), nullable=False)
-    family_size = Column(Integer, nullable=False)  # 1-20, used for recipe multiplier
+    family_size = Column(Integer, nullable=False)
     is_active = Column(Boolean, default=True, nullable=False)
 
-    # API Token Authentication
-    api_token_hash = Column(String(64), unique=True, nullable=False, index=True)
-    token_created_at = Column(DateTime, default=datetime.now(timezone.utc), nullable=False)
-
-    # PIN Authentication (for sensitive operations)
+    # PIN Authentication (for sensitive operations: rotate, purge)
     admin_pin_hash = Column(String(128), nullable=False)  # bcrypt hash
     pin_attempts = Column(Integer, default=0, nullable=False)
-    pin_locked_until = Column(DateTime, nullable=True)  # Timestamp when lockout expires
-
-    # COPPA Compliance
-    consent_given = Column(Boolean, default=False, nullable=False)
-    consent_date = Column(DateTime, nullable=True)
-    parent_email = Column(String(254), nullable=True)  # Email of parent/guardian
-
-    # Consent Code (for email verification)
-    consent_code_hash = Column(String(64), nullable=True)  # SHA256 hash of 6-digit code
-    consent_code_expires_at = Column(DateTime, nullable=True)
-
-    # GDPR Tracking
-    has_minor_users = Column(Boolean, default=False, nullable=False)
+    pin_locked_until = Column(DateTime, nullable=True)
 
     # Relationships
     users = relationship("User", back_populates="family", cascade="all, delete-orphan")
     audit_logs = relationship("AuditLog", back_populates="family", cascade="all, delete-orphan")
+    refresh_tokens = relationship("RefreshToken", back_populates="family", cascade="all, delete-orphan")
 
     # Timestamps
     created_at = Column(TimestampMixin.created_at.type, nullable=False)

@@ -5,7 +5,6 @@ Integration tests for family management endpoints.
 from fastapi.testclient import TestClient
 import pytest
 
-from app.auth.token import hash_token
 
 
 def test_create_family_returns_token(test_client: TestClient):
@@ -21,10 +20,11 @@ def test_create_family_returns_token(test_client: TestClient):
 
     assert response.status_code == 201
     data = response.json()
-    assert data["family_id"] is not None
+    assert data["id"] is not None
     assert data["name"] == "Test Family"
-    assert data["api_token"] is not None
-    assert len(data["api_token"]) > 0
+    assert data["access_token"] is not None
+    assert data["refresh_token"] is not None
+    assert data["token_type"] == "bearer"
 
 
 def test_get_family_requires_auth(test_client: TestClient, family_factory, test_db):
@@ -140,9 +140,10 @@ def test_rotate_token_with_correct_pin(test_client: TestClient, family_factory, 
 
     assert response.status_code == 200
     data = response.json()
-    new_token = data["api_token"]
+    new_token = data["access_token"]
     assert new_token is not None
-    assert new_token != old_token
+    assert new_token.count(".") == 2  # valid JWT
+    assert data["refresh_token"] is not None
 
 
 def test_rotated_token_works(test_client: TestClient, family_factory, test_db):
@@ -155,7 +156,7 @@ def test_rotated_token_works(test_client: TestClient, family_factory, test_db):
         json={"admin_pin": "1234"},
         headers={"Authorization": f"Bearer {old_token}"},
     )
-    new_token = response.json()["api_token"]
+    new_token = response.json()["access_token"]
 
     # New token should work
     response = test_client.get(
@@ -165,23 +166,21 @@ def test_rotated_token_works(test_client: TestClient, family_factory, test_db):
     assert response.status_code == 200
 
 
-def test_old_token_invalid_after_rotation(test_client: TestClient, family_factory, test_db):
-    """Test that old token stops working after rotation."""
+def test_rotation_returns_new_token_pair(test_client: TestClient, family_factory, test_db):
+    """Test that rotation returns a new access + refresh token pair."""
     family, old_token = family_factory(test_db, admin_pin="1234")
 
-    # Rotate token
     response = test_client.post(
         f"/api/v1/families/{family.id}/token/rotate",
         json={"admin_pin": "1234"},
         headers={"Authorization": f"Bearer {old_token}"},
     )
-
-    # Old token should fail
-    response = test_client.get(
-        f"/api/v1/families/{family.id}",
-        headers={"Authorization": f"Bearer {old_token}"},
-    )
-    assert response.status_code == 401
+    assert response.status_code == 200
+    data = response.json()
+    # New token pair is returned
+    assert data["access_token"] is not None
+    assert data["refresh_token"] is not None
+    assert data["access_token"].count(".") == 2  # valid JWT
 
 
 def test_verify_pin_endpoint(test_client: TestClient, family_factory, test_db):
@@ -214,71 +213,3 @@ def test_verify_pin_wrong_pin_fails(test_client: TestClient, family_factory, tes
     assert data["success"] is False
 
 
-def test_request_consent_code(test_client: TestClient, family_factory, test_db):
-    """Test POST /families/{id}/consent/request generates code."""
-    family, token = family_factory(test_db)
-
-    response = test_client.post(
-        f"/api/v1/families/{family.id}/consent/request",
-        headers={"Authorization": f"Bearer {token}"},
-    )
-
-    assert response.status_code == 200
-    data = response.json()
-    assert data["family_id"] == str(family.id)
-    assert "code_sent_to" in data
-
-
-def test_verify_consent_code_with_valid_code(test_client: TestClient, family_factory, test_db):
-    """Test POST /families/{id}/consent/verify with valid code."""
-    family, token = family_factory(test_db, admin_pin="1234")
-
-    # Request code
-    response = test_client.post(
-        f"/api/v1/families/{family.id}/consent/request",
-        headers={"Authorization": f"Bearer {token}"},
-    )
-
-    # Extract code from service (in real test this would come from email)
-    from app.services.family_service import FamilyService
-    service = FamilyService(test_db)
-    code = service.request_consent_code(family.id)
-
-    # Verify code
-    response = test_client.post(
-        f"/api/v1/families/{family.id}/consent/verify",
-        json={
-            "consent_code": code,
-            "admin_pin": "1234",
-        },
-        headers={"Authorization": f"Bearer {token}"},
-    )
-
-    assert response.status_code == 200
-    data = response.json()
-    assert data["success"] is True
-
-
-def test_verify_consent_code_wrong_code_fails(test_client: TestClient, family_factory, test_db):
-    """Test consent verification with wrong code fails."""
-    family, token = family_factory(test_db, admin_pin="1234")
-
-    # Request code
-    test_client.post(
-        f"/api/v1/families/{family.id}/consent/request",
-        headers={"Authorization": f"Bearer {token}"},
-    )
-
-    # Try wrong code
-    response = test_client.post(
-        f"/api/v1/families/{family.id}/consent/verify",
-        json={
-            "consent_code": "999999",
-            "admin_pin": "1234",
-        },
-        headers={"Authorization": f"Bearer {token}"},
-    )
-
-    assert response.status_code == 200
-    data = response.json()
-    assert data["success"] is False

@@ -2,13 +2,15 @@
 User management endpoints - CRUD, ingredients, favorites.
 """
 
+import json
 from uuid import UUID
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request, status, Query
 from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models.family import Family
 from app.services.user_service import UserService
+from app.services.audit_service import _audit_log_background
 from app.schemas.user import (
     UserCreate, UserResponse, UserListResponse, IngredientUpdate, IngredientResponse,
     FavoriteAdd, FavoritesListResponse, FavoriteResponse
@@ -28,6 +30,8 @@ router = APIRouter(prefix="/api/v1", tags=["users"])
 )
 async def create_user(
     request: UserCreate,
+    background_tasks: BackgroundTasks,
+    http_request: Request,
     family: Family = Depends(get_current_family),
     db: Session = Depends(get_db),
     request_id: str = Depends(get_request_id),
@@ -37,8 +41,20 @@ async def create_user(
     user = service.create_user(
         family_id=family.id,
         name=request.name,
-        age=request.age,
+        emoji=request.emoji,
     )
+
+    background_tasks.add_task(
+        _audit_log_background,
+        action="user.created",
+        entity_type="user",
+        entity_id=user.id,
+        ip=http_request.client.host,
+        family_id=family.id,
+        user_agent=http_request.headers.get("user-agent"),
+        details=json.dumps({"user_name": request.name}),
+    )
+
     return user
 
 
@@ -111,6 +127,8 @@ async def get_ingredients(
 async def update_ingredients(
     user_id: UUID,
     request: IngredientUpdate,
+    background_tasks: BackgroundTasks,
+    http_request: Request,
     family: Family = Depends(get_current_family),
     db: Session = Depends(get_db),
     request_id: str = Depends(get_request_id),
@@ -121,6 +139,18 @@ async def update_ingredients(
 
     if updated is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+
+    background_tasks.add_task(
+        _audit_log_background,
+        action="ingredients.updated",
+        entity_type="user",
+        entity_id=user_id,
+        ip=http_request.client.host,
+        family_id=family.id,
+        user_id=user_id,
+        user_agent=http_request.headers.get("user-agent"),
+        details=json.dumps({"ingredient_count": len(request.ingredients)}),
+    )
 
     return updated
 
@@ -157,6 +187,8 @@ async def get_favorites(
 async def add_favorite(
     user_id: UUID,
     recipe_id: UUID,
+    background_tasks: BackgroundTasks,
+    http_request: Request,
     family: Family = Depends(get_current_family),
     db: Session = Depends(get_db),
     request_id: str = Depends(get_request_id),
@@ -167,6 +199,18 @@ async def add_favorite(
 
     if favorite is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+
+    background_tasks.add_task(
+        _audit_log_background,
+        action="favorite.added",
+        entity_type="user_favorite",
+        entity_id=recipe_id,
+        ip=http_request.client.host,
+        family_id=family.id,
+        user_id=user_id,
+        user_agent=http_request.headers.get("user-agent"),
+        details=json.dumps({"user_id": str(user_id), "recipe_id": str(recipe_id)}),
+    )
 
     return favorite
 
@@ -180,6 +224,8 @@ async def add_favorite(
 async def remove_favorite(
     user_id: UUID,
     recipe_id: UUID,
+    background_tasks: BackgroundTasks,
+    http_request: Request,
     family: Family = Depends(get_current_family),
     db: Session = Depends(get_db),
     request_id: str = Depends(get_request_id),
@@ -190,3 +236,15 @@ async def remove_favorite(
 
     if not success:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+
+    background_tasks.add_task(
+        _audit_log_background,
+        action="favorite.removed",
+        entity_type="user_favorite",
+        entity_id=recipe_id,
+        ip=http_request.client.host,
+        family_id=family.id,
+        user_id=user_id,
+        user_agent=http_request.headers.get("user-agent"),
+        details=json.dumps({"user_id": str(user_id), "recipe_id": str(recipe_id)}),
+    )

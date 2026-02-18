@@ -8,6 +8,7 @@ from app.models.recipe import Recipe, RecipeIngredient, RecipeStep, RecipeTag
 from app.models.family import Family
 from app.models.user import User, UserIngredient, UserFavorite
 from app.models.audit import AuditLog
+from app.models.refresh_token import RefreshToken
 
 __all__ = [
     "Base",
@@ -23,4 +24,5 @@ __all__ = [
     "UserIngredient",
     "UserFavorite",
     "AuditLog",
+    "RefreshToken",
 ]

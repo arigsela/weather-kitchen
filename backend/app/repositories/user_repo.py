@@ -22,7 +22,7 @@ class UserRepository(BaseRepository[User]):
         self,
         family_id: UUID,
         name: str,
-        age: Optional[int] = None,
+        emoji: Optional[str] = None,
     ) -> User:
         """Create new user in family."""
         import uuid
@@ -30,7 +30,7 @@ class UserRepository(BaseRepository[User]):
             id=uuid.uuid4(),
             family_id=family_id,
             name=name,
-            age=age,
+            emoji=emoji,
             created_at=datetime.now(timezone.utc),
             updated_at=datetime.now(timezone.utc),
         )

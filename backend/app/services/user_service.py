@@ -22,10 +22,10 @@ class UserService:
         self,
         family_id: UUID,
         name: str,
-        age: Optional[int] = None,
+        emoji: Optional[str] = None,
     ) -> UserResponse:
         """Create new user in family."""
-        user = self.repository.create_user(family_id, name, age)
+        user = self.repository.create_user(family_id, name, emoji)
         self.db.commit()
         return UserResponse.model_validate(user)
 
@@ -51,7 +51,7 @@ class UserService:
         user_id: UUID,
         family_id: UUID,
         name: Optional[str] = None,
-        age: Optional[int] = None,
+        emoji: Optional[str] = None,
     ) -> Optional[UserResponse]:
         """Update user details."""
         user = self.repository.get_by_id_for_family(user_id, family_id)
@@ -60,8 +60,8 @@ class UserService:
 
         if name is not None:
             user.name = name
-        if age is not None:
-            user.age = age
+        if emoji is not None:
+            user.emoji = emoji
 
         self.db.add(user)
         self.db.commit()

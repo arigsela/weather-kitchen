@@ -12,7 +12,6 @@ def test_create_user_requires_auth(test_client: TestClient):
         "/api/v1/users",
         json={
             "name": "Test User",
-            "age": 10,
         },
     )
 
@@ -27,7 +26,6 @@ def test_create_user_with_valid_token(test_client: TestClient, family_factory, t
         "/api/v1/users",
         json={
             "name": "Child User",
-            "age": 10,
         },
         headers={"Authorization": f"Bearer {token}"},
     )
@@ -35,7 +33,6 @@ def test_create_user_with_valid_token(test_client: TestClient, family_factory, t
     assert response.status_code == 201
     data = response.json()
     assert data["name"] == "Child User"
-    assert data["age"] == 10
     assert data["family_id"] == str(family.id)
 
 
@@ -59,7 +56,7 @@ def test_list_users_in_family(test_client: TestClient, family_factory, user_fact
 def test_get_user_details(test_client: TestClient, family_factory, user_factory, test_db):
     """Test GET /users/{id} retrieves user details."""
     family, token = family_factory(test_db)
-    user = user_factory(test_db, family_id=family.id, name="Test User", age=12)
+    user = user_factory(test_db, family_id=family.id, name="Test User")
 
     response = test_client.get(
         f"/api/v1/users/{user.id}",
@@ -70,7 +67,6 @@ def test_get_user_details(test_client: TestClient, family_factory, user_factory,
     data = response.json()
     assert data["id"] == str(user.id)
     assert data["name"] == "Test User"
-    assert data["age"] == 12
 
 
 def test_get_user_without_ownership_returns_404(test_client: TestClient, family_factory, user_factory, test_db):

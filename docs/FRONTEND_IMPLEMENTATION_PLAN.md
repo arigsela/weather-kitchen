@@ -1,16 +1,24 @@
 # Weather Kitchen - Frontend Implementation Plan (React.js)
 
-**Document Version**: 1.0
+**Document Version**: 2.0 — Updated for JWT Auth & General Users
 **Created**: February 16, 2026
+**Updated**: February 18, 2026
 **Stack**: React 19 + TypeScript + Vite + TanStack Query + Tailwind CSS
 **Estimated Timeline**: 6 weeks (parallel with backend after Phase 1)
 **PRD Reference**: `docs/weather_kitcne_prd.md`
+
+> **v2.0 Changes from v1.0:**
+> - App pivoted from children's (COPPA) to **general users** — COPPA/age gate/consent flow removed
+> - Authentication changed from SHA256 API tokens to **JWT access + refresh tokens**
+> - `User.age` replaced by `User.emoji`
+> - Phase 5A rewritten: COPPA UI → GDPR Data Management
+> - New: `src/api/auth.ts`, `src/hooks/useAuth.ts`, JWT token refresh interceptor
 
 ---
 
 ## Overview
 
-A delightful, accessible, and secure React.js frontend for the Weather Kitchen recipe discovery app. Designed for children aged 6-12 with large touch targets, playful UI, and full COPPA compliance. Consumes the FastAPI backend REST API.
+A delightful, accessible, and secure React.js frontend for the Weather Kitchen recipe discovery app. Designed for general users with large touch targets, playful UI, and JWT-based authentication. Consumes the FastAPI backend REST API.
 
 ### Technology Choices
 
@@ -42,11 +50,12 @@ frontend/
 │   ├── main.tsx                        # React DOM entry point
 │   ├── App.tsx                         # Root: providers, router
 │   ├── api/                            # API client layer
-│   │   ├── client.ts                   # Base HTTP client (ky/fetch config)
+│   │   ├── client.ts                   # Base HTTP client with JWT refresh interceptor
+│   │   ├── auth.ts                     # refreshTokens(), logout() — NEW
 │   │   ├── recipes.ts                  # Recipe API functions
 │   │   ├── families.ts                 # Family API functions
 │   │   ├── users.ts                    # User API functions
-│   │   └── types.ts                    # API response/request types
+│   │   └── types.ts                    # API response/request types (JWT TokenResponse)
 │   ├── components/                     # Shared components
 │   │   ├── ui/                         # Generic UI primitives
 │   │   │   ├── Button.tsx
@@ -98,17 +107,16 @@ frontend/
 │   │   │   ├── useFamily.ts            # TanStack Query hook
 │   │   │   ├── useUsers.ts            # TanStack Query hook
 │   │   │   └── useCreateUser.ts        # Mutation hook
-│   │   └── privacy/                    # COPPA/GDPR compliance
-│   │       ├── ConsentPage.tsx         # Parental consent flow
+│   │   └── privacy/                    # GDPR compliance (no COPPA)
 │   │       ├── PrivacyPolicyPage.tsx   # Privacy policy display
-│   │       ├── DataManagementPage.tsx  # Export/delete family data
-│   │       └── AgeGate.tsx             # "Is the main user under 13?"
+│   │       └── DataManagementPage.tsx  # Export/delete family data (GDPR)
 │   ├── hooks/                          # Shared custom hooks
+│   │   ├── useAuth.ts                  # JWT token state, refresh, logout — NEW
 │   │   ├── useCurrentUser.ts           # Get/set current active user
 │   │   ├── useCurrentFamily.ts         # Get current family context
 │   │   └── useMultiplier.ts            # Calculate serving multiplier
 │   ├── store/                          # Client-side state (Zustand)
-│   │   ├── appStore.ts                 # Current user, family, theme preferences
+│   │   ├── appStore.ts                 # Current user, family, JWT tokens
 │   │   └── types.ts                    # Store types
 │   ├── types/                          # Shared TypeScript types
 │   │   ├── recipe.ts                   # Recipe, Ingredient, Step, Tag types
@@ -184,11 +192,13 @@ frontend/
 
 | # | Task | File(s) | Status |
 |---|------|---------|--------|
-| 8 | Create API client with base URL, error handling, retry logic | `src/api/client.ts` | ⬜ |
-| 9 | Create API type definitions matching backend schemas | `src/api/types.ts` | ⬜ |
+| 8 | Create API client with base URL, error handling, retry logic, and **JWT refresh interceptor** (on 401: call /auth/refresh → retry, on refresh failure: clear tokens + redirect) | `src/api/client.ts` | ⬜ |
+| 9 | Create API type definitions matching backend JWT schemas: `TokenResponse`, `FamilyCreateResponse` (with `access_token`/`refresh_token`), `User` (with `emoji` not `age`) | `src/api/types.ts` | ⬜ |
 | 10 | Configure TanStack Query client with defaults (staleTime, gcTime, retry) | `src/App.tsx` | ⬜ |
-| 11 | Create Zustand store for app state (currentUserId, currentFamilyId) | `src/store/appStore.ts` | ⬜ |
-| 12 | Create React Router config with nested layouts | `src/App.tsx` | ⬜ |
+| 11 | Create Zustand store for app state (currentUserId, currentFamilyId, **accessToken, refreshToken, tokenExpiry**) with `setTokens()`, `clearTokens()` actions | `src/store/appStore.ts` | ⬜ |
+| 11b | Create `src/api/auth.ts`: `refreshTokens(refreshToken)` and `logout(refreshToken)` | `src/api/auth.ts` | ⬜ |
+| 11c | Create `src/hooks/useAuth.ts`: exposes `{ isAuthenticated, accessToken, logout }`, auto-refreshes token before expiry | `src/hooks/useAuth.ts` | ⬜ |
+| 12 | Create React Router config with nested layouts, route guard (redirect to `/setup` if no access token) | `src/App.tsx` | ⬜ |
 
 ### Subphase 1C: Layout & UI Primitives
 
@@ -262,7 +272,7 @@ frontend/
 
 | # | Task | File(s) | Status |
 |---|------|---------|--------|
-| 19 | Create MSW mock handlers for recipe and stats endpoints | `tests/mocks/handlers.ts` | ⬜ |
+| 19 | Create MSW mock handlers for recipe, stats, **auth** (`POST /api/v1/families` → JWT response, `POST /api/v1/auth/refresh`, `POST /api/v1/auth/logout`) and family endpoints | `tests/mocks/handlers.ts` | ⬜ |
 | 20 | Unit tests: WeatherCard, RecipeCard, CategoryFilter, RecipeIngredients | `tests/unit/*.test.tsx` | ⬜ |
 | 21 | Unit test: multiplier utility (various family sizes) | `tests/unit/multiplier.test.ts` | ⬜ |
 | 22 | Integration test: full recipe discovery flow (select weather → see recipes → view detail) | `tests/integration/RecipeDiscovery.test.tsx` | ⬜ |
@@ -290,18 +300,18 @@ frontend/
 
 | # | Task | File(s) | Status |
 |---|------|---------|--------|
-| 1 | Create family API functions: createFamily, getFamily, updateFamily, deleteFamily | `src/api/families.ts` | ⬜ |
-| 2 | Create user API functions: createUser, listUsers, getUserIngredients, saveIngredients, getFavorites, toggleFavorite | `src/api/users.ts` | ⬜ |
-| 3 | Create User and Family TypeScript types | `src/types/user.ts` | ⬜ |
+| 1 | Create family API functions: `createFamily` (returns `access_token`+`refresh_token`+`token_type`+`expires_in`, **not** `api_token`), `getFamily`, `updateFamily`, `deleteFamily` | `src/api/families.ts` | ⬜ |
+| 2 | Create user API functions: `createUser` (accepts `name`+`emoji`, **not** `age`), `listUsers`, `getUserIngredients`, `saveIngredients`, `getFavorites`, `addFavorite`, `removeFavorite` | `src/api/users.ts` | ⬜ |
+| 3 | Create TypeScript types: `Family` (no `consent_given`/`api_token_hash`), `User` (`emoji: string`, no `age`), `TokenResponse`, `FamilyCreateResponse` | `src/types/user.ts` | ⬜ |
 
 ### Subphase 3B: Family Setup Flow
 
 | # | Task | File(s) | Status |
 |---|------|---------|--------|
-| 4 | Create FamilySetupPage (family name, family size slider 1-20, create button) | `src/features/family/FamilySetupPage.tsx` | ⬜ |
-| 5 | Create first user creation step within setup (name, pick emoji) | `src/features/family/FamilySetupPage.tsx` | ⬜ |
+| 4 | Create FamilySetupPage (family name, family size slider 1-20, admin PIN, create button) — on success: store `access_token` + `refresh_token` in Zustand | `src/features/family/FamilySetupPage.tsx` | ⬜ |
+| 5 | Create first user creation step within setup (name, pick emoji — **not age**) | `src/features/family/FamilySetupPage.tsx` | ⬜ |
 | 6 | Create `useFamily` and `useCreateUser` hooks | `src/features/family/useFamily.ts`, `useCreateUser.ts` | ⬜ |
-| 7 | Implement redirect to setup if no family exists (guard route) | `src/App.tsx` | ⬜ |
+| 7 | Implement redirect to `/setup` if no `accessToken` in store (JWT-aware guard route) | `src/App.tsx` | ⬜ |
 
 ### Subphase 3C: User Selection & Switching
 
@@ -394,21 +404,23 @@ frontend/
 
 ---
 
-## Phase 5: COPPA/Privacy, Accessibility & Polish
+## Phase 5: Privacy, Accessibility & Polish
 
-**Goal**: Compliant, accessible, polished experience for children
+**Goal**: GDPR data controls, accessible, polished experience for all users
 **Estimated Time**: 1 week
-**Tasks**: 14
+**Tasks**: 12
 
-### Subphase 5A: COPPA Compliance UI
+> **v2.0 Note**: COPPA compliance UI removed (AgeGate, ConsentPage, consent gate). Replaced with GDPR data management only.
+
+### Subphase 5A: GDPR Data Management
 
 | # | Task | File(s) | Status |
 |---|------|---------|--------|
-| 1 | Create AgeGate component ("Is the main user under 13?" → triggers consent flow) | `src/features/privacy/AgeGate.tsx` | ⬜ |
-| 2 | Create ConsentPage (parent email, consent checkbox, verification flow) | `src/features/privacy/ConsentPage.tsx` | ⬜ |
-| 3 | Create PrivacyPolicyPage (child-friendly language, accessible) | `src/features/privacy/PrivacyPolicyPage.tsx` | ⬜ |
-| 4 | Create DataManagementPage (export data button, delete family button with confirmation) | `src/features/privacy/DataManagementPage.tsx` | ⬜ |
-| 5 | Integrate consent check: block app usage until consent is given | `src/App.tsx` | ⬜ |
+| 1 | ~~Create AgeGate component~~ — **REMOVED** (no COPPA) | ~~`AgeGate.tsx`~~ | ~~N/A~~ |
+| 2 | ~~Create ConsentPage~~ — **REMOVED** (no COPPA) | ~~`ConsentPage.tsx`~~ | ~~N/A~~ |
+| 3 | Create PrivacyPolicyPage (general privacy policy, GDPR data retention info) | `src/features/privacy/PrivacyPolicyPage.tsx` | ⬜ |
+| 4 | Create DataManagementPage: "Export My Data" → `GET /api/v1/families/{id}/export`, "Delete My Data" → `DELETE /api/v1/families/{id}` with PIN + confirmation modal | `src/features/privacy/DataManagementPage.tsx` | ⬜ |
+| 5 | ~~Integrate consent check~~ — **REMOVED** (no COPPA consent gate in app) | ~~`src/App.tsx`~~ | ~~N/A~~ |
 | 6 | Add privacy policy link to Footer | `src/components/layout/Footer.tsx` | ⬜ |
 
 ### Subphase 5B: Accessibility (WCAG 2.1 AA)
@@ -435,23 +447,24 @@ frontend/
 
 | # | Task | File(s) | Status |
 |---|------|---------|--------|
-| 17 | E2E test: onboarding flow (age gate → consent → family setup → user creation → weather selection) | `tests/e2e/onboarding.spec.ts` | ⬜ |
+| 17 | E2E test: onboarding flow (**family setup → user emoji selection → weather selection** — no age gate or consent) | `tests/e2e/onboarding.spec.ts` | ⬜ |
 | 18 | E2E test: recipe discovery (select weather → filter category → view recipe → next recipe) | `tests/e2e/recipe-discovery.spec.ts` | ⬜ |
 | 19 | E2E test: favorites (add favorite → check favorites page → remove) | `tests/e2e/favorites.spec.ts` | ⬜ |
 | 20 | E2E test: user switching (select user A → add favorite → switch to user B → verify no favorite) | `tests/e2e/user-switching.spec.ts` | ⬜ |
-| 21 | E2E test: privacy (data export, data deletion confirmation) | `tests/e2e/privacy.spec.ts` | ⬜ |
+| 21 | E2E test: auth refresh (access token expires → silent refresh → user unaware; refresh token expired → redirect to setup) | `tests/e2e/auth-refresh.spec.ts` | ⬜ |
 
 ### Phase 5 Acceptance Criteria
-- [ ] Age gate blocks app for children without parental consent
-- [ ] Consent flow collects parent email and consent checkbox
+- [ ] ~~Age gate and consent flow~~ — **REMOVED** (no COPPA)
 - [ ] Privacy policy accessible from every page via footer
-- [ ] Data export downloads JSON file with all family data
-- [ ] Data deletion shows confirmation modal, then removes all data
+- [ ] Data export downloads JSON file with all family data (`GET /api/v1/families/{id}/export`)
+- [ ] Data deletion shows PIN confirmation modal, then removes all data
+- [ ] JWT token refresh happens silently without interrupting user
+- [ ] Expired refresh token redirects to `/setup` with clear "session expired" message
 - [ ] All interactive elements keyboard accessible
 - [ ] Screen reader can navigate full app flow
 - [ ] Color contrast meets WCAG AA standards
 - [ ] All touch targets >= 44x44px
-- [ ] Animations are playful and child-appropriate
+- [ ] Animations are smooth and polished
 - [ ] 5+ E2E tests passing across Chrome/Firefox/Safari
 
 ---
@@ -528,9 +541,9 @@ frontend/
 | `/settings` | FamilySettingsPage | Family configuration | 3 |
 | `/users` | UserSelectorPage | Pick active user | 3 |
 | `/setup` | FamilySetupPage | First-time family setup | 3 |
-| `/privacy` | PrivacyPolicyPage | Privacy policy | 5 |
-| `/privacy/data` | DataManagementPage | Export/delete data | 5 |
-| `/consent` | ConsentPage | Parental consent flow | 5 |
+| `/privacy` | PrivacyPolicyPage | Privacy policy (GDPR) | 5 |
+| `/privacy/data` | DataManagementPage | Export/delete data (GDPR) | 5 |
+| ~~`/consent`~~ | ~~ConsentPage~~ | ~~Parental consent~~ — **REMOVED** | ~~5~~ |
 
 ---
 
@@ -596,7 +609,10 @@ Only local app state in Zustand:
 - `currentFamilyId: string | null`
 - `currentUserId: string | null`
 - `hasCompletedSetup: boolean`
-- `hasConsent: boolean`
+- `accessToken: string | null` — current JWT access token (15-min TTL)
+- `refreshToken: string | null` — JWT refresh token (7-day TTL, stored in sessionStorage)
+- `tokenExpiry: number | null` — Unix timestamp when access token expires
+- ~~`hasConsent: boolean`~~ — **REMOVED** (no COPPA)
 
 ### State Flow
 ```
@@ -794,6 +810,19 @@ Using latest versions:
 
 ---
 
-**Plan Status**: Ready for Implementation
-**Last Updated**: February 16, 2026
-**Overall Progress**: 0/~90 tasks (0%)
+**Plan Status**: Ready for Implementation (v2.0 — aligned with JWT backend)
+**Last Updated**: February 18, 2026
+**Overall Progress**: 0/~85 tasks (0%)
+
+### v2.0 Breaking Changes Summary
+
+| Area | v1.0 | v2.0 |
+|------|------|------|
+| Auth | Single `api_token` from `createFamily` | JWT `access_token` + `refresh_token` |
+| Token refresh | No refresh — token never expired | Auto-refresh via `POST /api/v1/auth/refresh` |
+| User field | `age: number` | `emoji: string` |
+| COPPA | AgeGate + ConsentPage + consent gate | **Removed** — general users only |
+| Privacy | COPPA + GDPR consent flow | GDPR data export/delete only |
+| Store | `hasConsent: boolean` | `accessToken`, `refreshToken`, `tokenExpiry` |
+| Route guard | Redirect if no `api_token` | Redirect if no `accessToken` (JWT) |
+| New files | — | `src/api/auth.ts`, `src/hooks/useAuth.ts` |

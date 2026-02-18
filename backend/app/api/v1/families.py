@@ -2,20 +2,23 @@
 Family management endpoints - create, read, update, delete families and manage authentication.
 """
 
+import json
 from uuid import UUID
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models.family import Family
 from app.services.family_service import FamilyService
+from app.services.audit_service import _audit_log_background
 from app.schemas.family import (
     FamilyCreate, FamilyCreateResponse, FamilyResponse, FamilyUpdate, FamilyExportResponse
 )
 from app.schemas.auth import (
     TokenRotateRequest, TokenRotateResponse, PinVerifyRequest, PinVerifyResponse,
-    ConsentRequestResponse, ConsentVerifyRequest, ConsentVerifyResponse, SuccessResponse
+    SuccessResponse,
 )
+from app.config import settings
 from app.auth.dependencies import get_current_family, require_family_owner, require_pin
 from app.middleware.request_id import get_request_id
 
@@ -31,21 +34,38 @@ router = APIRouter(prefix="/api/v1", tags=["families"])
 )
 async def create_family(
     request: FamilyCreate,
+    background_tasks: BackgroundTasks,
+    http_request: Request,
     db: Session = Depends(get_db),
     request_id: str = Depends(get_request_id),
 ) -> FamilyCreateResponse:
     """Create a new family account."""
     service = FamilyService(db)
-    family_response, plaintext_token = service.create_family(
+    family_response, access_token, refresh_token = service.create_family(
         name=request.name,
         family_size=request.family_size,
         admin_pin=request.admin_pin,
     )
 
-    return FamilyCreateResponse(
+    background_tasks.add_task(
+        _audit_log_background,
+        action="family.created",
+        entity_type="family",
+        entity_id=family_response.id,
+        ip=http_request.client.host,
         family_id=family_response.id,
+        user_agent=http_request.headers.get("user-agent"),
+        details=json.dumps({"family_name": request.name, "family_size": request.family_size}),
+    )
+
+    return FamilyCreateResponse(
+        id=family_response.id,
         name=family_response.name,
-        api_token=plaintext_token,
+        family_size=family_response.family_size,
+        access_token=access_token,
+        refresh_token=refresh_token,
+        token_type="bearer",
+        expires_in=settings.jwt_access_token_expire_minutes * 60,
     )
 
 
@@ -100,6 +120,8 @@ async def update_family(
 )
 async def soft_delete_family(
     family_id: UUID,
+    background_tasks: BackgroundTasks,
+    http_request: Request,
     family: Family = Depends(require_family_owner),
     db: Session = Depends(get_db),
     request_id: str = Depends(get_request_id),
@@ -110,6 +132,16 @@ async def soft_delete_family(
 
     if not success:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Family not found")
+
+    background_tasks.add_task(
+        _audit_log_background,
+        action="family.soft_deleted",
+        entity_type="family",
+        entity_id=family_id,
+        ip=http_request.client.host,
+        family_id=family_id,
+        user_agent=http_request.headers.get("user-agent"),
+    )
 
     return SuccessResponse(success=True, message="Family soft-deleted successfully")
 
@@ -123,6 +155,8 @@ async def soft_delete_family(
 async def hard_delete_family(
     family_id: UUID,
     request: PinVerifyRequest,
+    background_tasks: BackgroundTasks,
+    http_request: Request,
     family: Family = Depends(require_family_owner),
     db: Session = Depends(get_db),
     request_id: str = Depends(get_request_id),
@@ -132,6 +166,20 @@ async def hard_delete_family(
     verified, _ = FamilyService(db).verify_pin(family_id, request.admin_pin)
     if not verified:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid PIN")
+
+    # Log before deleting so the family_id FK still resolves in the background session.
+    # AuditLog has ON DELETE CASCADE so the entry will be removed with the family, but
+    # the background task opening its own session may race; log before hard-delete runs.
+    background_tasks.add_task(
+        _audit_log_background,
+        action="family.hard_deleted",
+        entity_type="family",
+        entity_id=family_id,
+        ip=http_request.client.host,
+        family_id=None,  # avoid FK violation after hard delete
+        user_agent=http_request.headers.get("user-agent"),
+        details=json.dumps({"family_id": str(family_id)}),
+    )
 
     service = FamilyService(db)
     success = service.hard_delete(family_id)
@@ -150,6 +198,8 @@ async def hard_delete_family(
 )
 async def export_family(
     family_id: UUID,
+    background_tasks: BackgroundTasks,
+    http_request: Request,
     family: Family = Depends(require_family_owner),
     db: Session = Depends(get_db),
     request_id: str = Depends(get_request_id),
@@ -160,6 +210,16 @@ async def export_family(
 
     if not data:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Family not found")
+
+    background_tasks.add_task(
+        _audit_log_background,
+        action="family.exported",
+        entity_type="family",
+        entity_id=family_id,
+        ip=http_request.client.host,
+        family_id=family_id,
+        user_agent=http_request.headers.get("user-agent"),
+    )
 
     return FamilyExportResponse(**data)
 
@@ -173,25 +233,37 @@ async def export_family(
 async def rotate_token(
     family_id: UUID,
     request: TokenRotateRequest,
+    background_tasks: BackgroundTasks,
+    http_request: Request,
     family: Family = Depends(require_family_owner),
     db: Session = Depends(get_db),
     request_id: str = Depends(get_request_id),
 ) -> TokenRotateResponse:
     """Rotate API token after PIN verification."""
     # Verify PIN
-    verified, _ = FamilyService(db).verify_pin(family_id, request.admin_pin)
+    service = FamilyService(db)
+    verified, _ = service.verify_pin(family_id, request.admin_pin)
     if not verified:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid PIN")
 
-    service = FamilyService(db)
-    new_token = service.rotate_token(family_id)
+    access_token, refresh_token = service.rotate_tokens(family_id)
 
-    if not new_token:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Family not found")
+    background_tasks.add_task(
+        _audit_log_background,
+        action="token.rotated",
+        entity_type="auth",
+        entity_id=family_id,
+        ip=http_request.client.host,
+        family_id=family_id,
+        user_agent=http_request.headers.get("user-agent"),
+    )
 
     return TokenRotateResponse(
         family_id=family_id,
-        api_token=new_token,
+        access_token=access_token,
+        refresh_token=refresh_token,
+        token_type="bearer",
+        expires_in=settings.jwt_access_token_expire_minutes * 60,
     )
 
 
@@ -204,6 +276,8 @@ async def rotate_token(
 async def verify_pin(
     family_id: UUID,
     request: PinVerifyRequest,
+    background_tasks: BackgroundTasks,
+    http_request: Request,
     family: Family = Depends(require_family_owner),
     db: Session = Depends(get_db),
     request_id: str = Depends(get_request_id),
@@ -213,70 +287,25 @@ async def verify_pin(
     success, message = service.verify_pin(family_id, request.admin_pin)
 
     if success:
+        background_tasks.add_task(
+            _audit_log_background,
+            action="pin.verified",
+            entity_type="auth",
+            entity_id=family_id,
+            ip=http_request.client.host,
+            family_id=family_id,
+            user_agent=http_request.headers.get("user-agent"),
+        )
         return PinVerifyResponse(success=True, message="PIN verified successfully")
     else:
+        background_tasks.add_task(
+            _audit_log_background,
+            action="pin.failed",
+            entity_type="auth",
+            entity_id=family_id,
+            ip=http_request.client.host,
+            family_id=family_id,
+            user_agent=http_request.headers.get("user-agent"),
+            details=json.dumps({"reason": message}),
+        )
         return PinVerifyResponse(success=False, message=message or "Invalid PIN")
-
-
-@router.post(
-    "/families/{family_id}/consent/request",
-    response_model=ConsentRequestResponse,
-    summary="Request parental consent",
-    description="Send consent verification code to parent email (requires authentication)",
-)
-async def request_consent(
-    family_id: UUID,
-    family: Family = Depends(require_family_owner),
-    db: Session = Depends(get_db),
-    request_id: str = Depends(get_request_id),
-) -> ConsentRequestResponse:
-    """Request parental consent code."""
-    service = FamilyService(db)
-    code = service.request_consent_code(family_id)
-
-    if not code:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Family not found")
-
-    # In production, send via email_service
-    # For now, just note it was generated
-    parent_email = family.parent_email or "parent@example.com"
-    masked_email = parent_email.replace(parent_email.split("@")[0][2:], "***")
-
-    return ConsentRequestResponse(
-        family_id=family_id,
-        message=f"Consent code sent to {parent_email}",
-        code_sent_to=masked_email,
-    )
-
-
-@router.post(
-    "/families/{family_id}/consent/verify",
-    response_model=ConsentVerifyResponse,
-    summary="Verify parental consent",
-    description="Verify consent code and set consent flag (requires authentication + PIN)",
-)
-async def verify_consent(
-    family_id: UUID,
-    request: ConsentVerifyRequest,
-    family: Family = Depends(require_family_owner),
-    db: Session = Depends(get_db),
-    request_id: str = Depends(get_request_id),
-) -> ConsentVerifyResponse:
-    """Verify parental consent code after PIN verification."""
-    # Verify PIN first
-    service = FamilyService(db)
-    verified, _ = service.verify_pin(family_id, request.admin_pin)
-    if not verified:
-        return ConsentVerifyResponse(success=False, message="Invalid PIN")
-
-    # Verify consent code
-    success = service.verify_consent_code(family_id, request.consent_code)
-
-    if not success:
-        return ConsentVerifyResponse(success=False, message="Invalid or expired consent code")
-
-    return ConsentVerifyResponse(
-        success=True,
-        message="Parental consent verified",
-        family_id=family_id,
-    )

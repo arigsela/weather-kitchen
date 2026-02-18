@@ -16,7 +16,6 @@ from app.models.family import Family
 from app.models.user import User
 from app.models.recipe import Recipe
 from app.database import get_db
-from app.auth.token import generate_api_token, hash_token
 from app.auth.pin import hash_pin
 
 
@@ -76,7 +75,7 @@ def family_factory(test_db):
 
         from app.services.family_service import FamilyService
         service = FamilyService(db)
-        response, token = service.create_family(
+        response, access_token, refresh_token = service.create_family(
             name=name,
             family_size=family_size,
             admin_pin=admin_pin,
@@ -84,7 +83,8 @@ def family_factory(test_db):
 
         # Retrieve the created family object
         family = db.query(Family).filter(Family.id == response.id).first()
-        return family, token
+        # Return access_token — used as Bearer token in Authorization headers
+        return family, access_token
 
     return _create_family
 
@@ -96,14 +96,14 @@ def user_factory():
         db: Session,
         family_id,
         name: str = "Test User",
-        age: int = 10,
+        emoji: str | None = None,
     ) -> User:
         """Create a user in a family."""
         user = User(
             id=uuid4(),
             family_id=family_id,
             name=name,
-            age=age,
+            emoji=emoji,
             created_at=datetime.now(timezone.utc),
             updated_at=datetime.now(timezone.utc),
         )

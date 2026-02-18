@@ -4,19 +4,31 @@ User request and response schemas.
 
 from uuid import UUID
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
+
+
+def _reject_null_bytes(v: str) -> str:
+    """Reject strings containing null bytes."""
+    if "\x00" in v:
+        raise ValueError("Null bytes are not allowed")
+    return v
 
 
 class UserCreate(BaseModel):
     """Create user request."""
 
     name: str = Field(..., min_length=1, max_length=100, description="User name")
-    age: int | None = Field(None, ge=5, le=18, description="User age (5-18 for COPPA tracking)")
+    emoji: str | None = Field(None, max_length=2, description="User emoji")
+
+    @field_validator("name")
+    @classmethod
+    def name_no_null_bytes(cls, v: str) -> str:
+        return _reject_null_bytes(v)
 
     model_config = ConfigDict(examples=[
         {
             "name": "Emma",
-            "age": 8,
+            "emoji": "👧",
         }
     ])
 
@@ -27,7 +39,7 @@ class UserResponse(BaseModel):
     id: UUID = Field(..., description="User UUID")
     family_id: UUID = Field(..., description="Family UUID this user belongs to")
     name: str = Field(..., description="User name")
-    age: int | None = Field(None, description="User age")
+    emoji: str | None = Field(None, description="User emoji")
     created_at: datetime = Field(..., description="User creation timestamp")
     updated_at: datetime = Field(..., description="Last update timestamp")
 
@@ -36,7 +48,7 @@ class UserResponse(BaseModel):
             "id": "550e8400-e29b-41d4-a716-446655440001",
             "family_id": "550e8400-e29b-41d4-a716-446655440000",
             "name": "Emma",
-            "age": 8,
+            "emoji": "👧",
             "created_at": "2026-02-16T10:30:00Z",
             "updated_at": "2026-02-16T10:30:00Z",
         }

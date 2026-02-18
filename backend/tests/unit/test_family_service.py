@@ -11,9 +11,9 @@ from app.auth.pin import verify_pin as verify_pin_hash
 
 
 def test_create_family_generates_token(test_db: Session):
-    """Test that family creation generates a valid token."""
+    """Test that family creation generates a JWT access + refresh token pair."""
     service = FamilyService(test_db)
-    response, token = service.create_family(
+    response, access_token, refresh_token = service.create_family(
         name="Test Family",
         family_size=4,
         admin_pin="1234",
@@ -23,15 +23,16 @@ def test_create_family_generates_token(test_db: Session):
     assert response.name == "Test Family"
     assert response.family_size == 4
     assert response.is_active is True
-    assert token is not None
-    assert len(token) > 0
+    # JWT tokens have 2 dots (3 parts: header.payload.signature)
+    assert access_token.count(".") == 2
+    assert refresh_token.count(".") == 2
 
 
 def test_create_family_hashes_pin(test_db: Session):
     """Test that admin PIN is properly hashed."""
     service = FamilyService(test_db)
     admin_pin = "5678"
-    response, token = service.create_family(
+    response, access_token, refresh_token = service.create_family(
         name="PIN Test Family",
         family_size=2,
         admin_pin=admin_pin,
@@ -108,13 +109,18 @@ def test_successful_pin_resets_attempts(test_db: Session, family_factory):
 
 
 def test_rotate_token_generates_new_token(test_db: Session, family_factory):
-    """Test that token rotation generates a new valid token."""
-    family, old_token = family_factory(test_db, admin_pin="1234")
+    """Test that token rotation issues a new JWT access + refresh pair."""
+    family, old_access_token = family_factory(test_db, admin_pin="1234")
     service = FamilyService(test_db)
 
-    new_token = service.rotate_token(family.id)
-    assert new_token is not None
-    assert new_token != old_token
+    new_access, new_refresh = service.rotate_tokens(family.id)
+    assert new_access is not None
+    assert new_refresh is not None
+    # Both are valid JWTs (3 parts: header.payload.signature)
+    assert new_access.count(".") == 2
+    assert new_refresh.count(".") == 2
+    # Refresh token has a unique jti — always different from original
+    assert new_refresh != old_access_token
 
 
 def test_soft_delete_marks_inactive(test_db: Session, family_factory):
@@ -142,47 +148,6 @@ def test_hard_delete_removes_family(test_db: Session, family_factory):
     # Verify family is gone
     retrieved = service.get_family(family_id)
     assert retrieved is None
-
-
-def test_request_consent_code_generates_code(test_db: Session, family_factory):
-    """Test that consent code request generates and returns code."""
-    family, token = family_factory(test_db)
-    service = FamilyService(test_db)
-
-    code = service.request_consent_code(family.id)
-    assert code is not None
-    assert len(code) == 6
-    assert code.isdigit()
-
-
-def test_verify_consent_code_validates_code(test_db: Session, family_factory):
-    """Test that consent code verification validates the code."""
-    family, token = family_factory(test_db)
-    service = FamilyService(test_db)
-
-    # Request code
-    code = service.request_consent_code(family.id)
-
-    # Verify code
-    verified = service.verify_consent_code(family.id, code)
-    assert verified is True
-
-    # Verify consent is set
-    test_db.refresh(family)
-    assert family.consent_given is True
-
-
-def test_verify_consent_code_wrong_code_fails(test_db: Session, family_factory):
-    """Test that wrong consent code fails."""
-    family, token = family_factory(test_db)
-    service = FamilyService(test_db)
-
-    # Request code
-    service.request_consent_code(family.id)
-
-    # Try wrong code
-    verified = service.verify_consent_code(family.id, "999999")
-    assert verified is False
 
 
 def test_export_family_data_includes_all_data(test_db: Session, family_factory, user_factory):

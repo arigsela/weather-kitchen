@@ -26,7 +26,6 @@ class User(DeclarativeBase):
 
     # User data
     name = Column(String(50), nullable=False)
-    age = Column(Integer, nullable=True)  # Optional age for COPPA tracking
     emoji = Column(String(2), nullable=True, default="👤")  # Optional emoji, defaults to person
     is_active = Column(Boolean, default=True, nullable=False)
 

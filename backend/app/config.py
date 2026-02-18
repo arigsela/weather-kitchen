@@ -3,7 +3,14 @@ Application configuration using Pydantic Settings.
 Loads configuration from environment variables.
 """
 
+import logging
+import secrets
 from pydantic_settings import BaseSettings
+
+logger = logging.getLogger(__name__)
+
+# Insecure dev-only fallback — will trigger a warning at startup
+_DEV_JWT_SECRET = "dev-secret-key-INSECURE-do-not-use-in-production-change-me"
 
 
 class Settings(BaseSettings):
@@ -42,9 +49,11 @@ class Settings(BaseSettings):
     pin_lockout_minutes: int = 15
     bcrypt_rounds: int = 12
 
-    # Consent & COPPA
-    consent_code_length: int = 6
-    consent_code_expiry_minutes: int = 30
+    # JWT Settings — JWT_SECRET_KEY must be set in production via environment variable
+    jwt_secret_key: str = _DEV_JWT_SECRET
+    jwt_algorithm: str = "HS256"
+    jwt_access_token_expire_minutes: int = 15
+    jwt_refresh_token_expire_days: int = 7
 
     # Pagination
     pagination_default_limit: int = 20
