@@ -124,6 +124,4 @@ See [`backend/.env.example`](backend/.env.example) for all variables.
 | [`docs/weather_kitcne_prd.md`](docs/weather_kitcne_prd.md) | Product requirements |
 | [`docs/BACKEND_IMPLEMENTATION_PLAN.md`](docs/BACKEND_IMPLEMENTATION_PLAN.md) | Backend phases 1-6 (complete) |
 | [`docs/FRONTEND_IMPLEMENTATION_PLAN.md`](docs/FRONTEND_IMPLEMENTATION_PLAN.md) | Frontend phases 1-6 (planned) |
-| [`docs/backend-deployment.md`](docs/backend-deployment.md) | Production deployment guide |
-| [`docs/CSRF.md`](docs/CSRF.md) | CSRF protection explanation |
 | [`backend/README.md`](backend/README.md) | Backend quickstart + curl examples |
