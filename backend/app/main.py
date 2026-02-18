@@ -39,9 +39,19 @@ async def lifespan(app: FastAPI):
     # Startup
     logger.info("Starting Weather Kitchen API")
     if settings.jwt_secret_key == _DEV_JWT_SECRET:
+        if settings.environment == "production":
+            raise RuntimeError(
+                "JWT_SECRET_KEY must be set to a secure value in production. "
+                "Generate one with: python -c \"import secrets; print(secrets.token_hex(32))\""
+            )
         logger.warning(
             "JWT_SECRET_KEY is using the insecure dev default. "
             "Set JWT_SECRET_KEY environment variable before deploying to production."
+        )
+    if len(settings.jwt_secret_key) < 32:
+        raise RuntimeError(
+            f"JWT_SECRET_KEY is too short ({len(settings.jwt_secret_key)} chars). "
+            "Minimum 32 characters required per RFC 7518."
         )
     DeclarativeBase.metadata.create_all(bind=engine)
     logger.info("Database tables created/verified")

@@ -114,14 +114,12 @@ async def require_pin(
     Verify PIN and check lockout status.
     Raises 423 if locked out, 403 if PIN incorrect.
     """
-    is_locked, lockout_expires_at = check_lockout(
-        family.pin_attempts,
-        family.pin_locked_until,
-    )
+    is_locked, seconds_remaining = check_lockout(family.pin_locked_until)
     if is_locked:
+        minutes_remaining = max(1, seconds_remaining // 60)
         raise HTTPException(
             status_code=status.HTTP_423_LOCKED,
-            detail=f"Too many failed attempts. Try again after {lockout_expires_at}",
+            detail=f"Too many failed attempts. Try again in {minutes_remaining} minute(s).",
         )
 
     pin_correct = verify_pin_hash(pin, family.admin_pin_hash)
