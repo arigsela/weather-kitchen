@@ -27,9 +27,10 @@ uv.lock
 coverage.xml
 htmlcov/
 
-# Pytest
+# Pytest / test artifacts
 .pytest_cache/
 bandit-report.json
+*-pytest-*.pyc
 
 # Environment
 .env
