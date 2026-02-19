@@ -20,20 +20,24 @@ class FamilyCreate(BaseModel):
 
     name: str = Field(..., min_length=1, max_length=100, description="Family name")
     family_size: int = Field(..., ge=1, le=20, description="Number of family members (1-20)")
-    admin_pin: str = Field(..., min_length=4, max_length=6, pattern=r"^\d+$", description="4-6 digit numeric PIN")
+    admin_pin: str = Field(
+        ..., min_length=4, max_length=6, pattern=r"^\d+$", description="4-6 digit numeric PIN"
+    )
 
     @field_validator("name")
     @classmethod
     def name_no_null_bytes(cls, v: str) -> str:
         return _reject_null_bytes(v)
 
-    model_config = ConfigDict(examples=[
-        {
-            "name": "Smith Family",
-            "family_size": 4,
-            "admin_pin": "1234",
-        }
-    ])
+    model_config = ConfigDict(
+        examples=[
+            {
+                "name": "Smith Family",
+                "family_size": 4,
+                "admin_pin": "1234",
+            }
+        ]
+    )
 
 
 class FamilyCreateResponse(BaseModel):
@@ -47,17 +51,19 @@ class FamilyCreateResponse(BaseModel):
     token_type: str = Field(default="bearer", description="Token type")
     expires_in: int = Field(default=900, description="Access token expiry in seconds")
 
-    model_config = ConfigDict(examples=[
-        {
-            "id": "550e8400-e29b-41d4-a716-446655440000",
-            "name": "Smith Family",
-            "family_size": 4,
-            "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-            "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-            "token_type": "bearer",
-            "expires_in": 900,
-        }
-    ])
+    model_config = ConfigDict(
+        examples=[
+            {
+                "id": "550e8400-e29b-41d4-a716-446655440000",
+                "name": "Smith Family",
+                "family_size": 4,
+                "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+                "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+                "token_type": "bearer",
+                "expires_in": 900,
+            }
+        ]
+    )
 
 
 class FamilyResponse(BaseModel):
@@ -70,16 +76,19 @@ class FamilyResponse(BaseModel):
     created_at: datetime = Field(..., description="Account creation timestamp")
     updated_at: datetime = Field(..., description="Last update timestamp")
 
-    model_config = ConfigDict(from_attributes=True, examples=[
-        {
-            "id": "550e8400-e29b-41d4-a716-446655440000",
-            "name": "Smith Family",
-            "family_size": 4,
-            "is_active": True,
-            "created_at": "2026-02-16T10:30:00Z",
-            "updated_at": "2026-02-16T10:30:00Z",
-        }
-    ])
+    model_config = ConfigDict(
+        from_attributes=True,
+        examples=[
+            {
+                "id": "550e8400-e29b-41d4-a716-446655440000",
+                "name": "Smith Family",
+                "family_size": 4,
+                "is_active": True,
+                "created_at": "2026-02-16T10:30:00Z",
+                "updated_at": "2026-02-16T10:30:00Z",
+            }
+        ],
+    )
 
 
 class FamilyUpdate(BaseModel):
@@ -95,12 +104,14 @@ class FamilyUpdate(BaseModel):
             return _reject_null_bytes(v)
         return v
 
-    model_config = ConfigDict(examples=[
-        {
-            "name": "Smith-Johnson Family",
-            "family_size": 5,
-        }
-    ])
+    model_config = ConfigDict(
+        examples=[
+            {
+                "name": "Smith-Johnson Family",
+                "family_size": 5,
+            }
+        ]
+    )
 
 
 class FamilyExportResponse(BaseModel):
@@ -111,18 +122,20 @@ class FamilyExportResponse(BaseModel):
     audit_log: list[dict] = Field(..., description="Audit log entries")
     export_date: datetime = Field(..., description="Export timestamp")
 
-    model_config = ConfigDict(examples=[
-        {
-            "family": {
-                "id": "550e8400-e29b-41d4-a716-446655440000",
-                "name": "Smith Family",
-                "family_size": 4,
-                "is_active": True,
-                "created_at": "2026-02-16T10:30:00Z",
-                "updated_at": "2026-02-16T10:30:00Z",
-            },
-            "users": [],
-            "audit_log": [],
-            "export_date": "2026-02-16T10:30:00Z",
-        }
-    ])
+    model_config = ConfigDict(
+        examples=[
+            {
+                "family": {
+                    "id": "550e8400-e29b-41d4-a716-446655440000",
+                    "name": "Smith Family",
+                    "family_size": 4,
+                    "is_active": True,
+                    "created_at": "2026-02-16T10:30:00Z",
+                    "updated_at": "2026-02-16T10:30:00Z",
+                },
+                "users": [],
+                "audit_log": [],
+                "export_date": "2026-02-16T10:30:00Z",
+            }
+        ]
+    )

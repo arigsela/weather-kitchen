@@ -39,6 +39,7 @@ XSS_PAYLOADS = [
 # Helper
 # ---------------------------------------------------------------------------
 
+
 def _assert_payload_handled(response, payload: str) -> None:
     """Assert payload is either rejected (422) or returned as literal text (200/201)."""
     if response.status_code == 422:
@@ -57,6 +58,7 @@ def _assert_payload_handled(response, payload: str) -> None:
 # Family name XSS tests
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.parametrize("payload", XSS_PAYLOADS[:10])
 def test_xss_in_family_name_on_create(test_client: TestClient, payload: str):
     """Test that XSS payloads in family name are rejected or returned as literal strings on creation."""
@@ -72,7 +74,9 @@ def test_xss_in_family_name_on_create(test_client: TestClient, payload: str):
 
 
 @pytest.mark.parametrize("payload", XSS_PAYLOADS[10:])
-def test_xss_in_family_name_on_update(test_client: TestClient, family_factory, test_db, payload: str):
+def test_xss_in_family_name_on_update(
+    test_client: TestClient, family_factory, test_db, payload: str
+):
     """Test that XSS payloads in family name are rejected or returned as literal strings on update."""
     family, token = family_factory(test_db)
 
@@ -88,6 +92,7 @@ def test_xss_in_family_name_on_update(test_client: TestClient, family_factory, t
 # User name XSS tests
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.parametrize("payload", XSS_PAYLOADS[:10])
 def test_xss_in_user_name_on_create(test_client: TestClient, family_factory, test_db, payload: str):
     """Test that XSS payloads in user name are rejected or stored as literal strings on creation."""
@@ -102,7 +107,9 @@ def test_xss_in_user_name_on_create(test_client: TestClient, family_factory, tes
 
 
 @pytest.mark.parametrize("payload", XSS_PAYLOADS[10:])
-def test_xss_in_user_name_additional_payloads(test_client: TestClient, family_factory, test_db, payload: str):
+def test_xss_in_user_name_additional_payloads(
+    test_client: TestClient, family_factory, test_db, payload: str
+):
     """Test that additional XSS payloads in user name are handled safely."""
     family, token = family_factory(test_db)
 
@@ -118,8 +125,11 @@ def test_xss_in_user_name_additional_payloads(test_client: TestClient, family_fa
 # Ingredient text XSS tests
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.parametrize("payload", XSS_PAYLOADS[:10])
-def test_xss_in_ingredient_text(test_client: TestClient, family_factory, user_factory, test_db, payload: str):
+def test_xss_in_ingredient_text(
+    test_client: TestClient, family_factory, user_factory, test_db, payload: str
+):
     """Test that XSS payloads in ingredient text are rejected or stored as literal strings."""
     family, token = family_factory(test_db)
     user = user_factory(test_db, family_id=family.id)
@@ -152,7 +162,10 @@ def test_xss_in_ingredient_text_additional_payloads(
 # Spot-check: stored literal value verification
 # ---------------------------------------------------------------------------
 
-def test_basic_script_tag_stored_as_literal_or_rejected(test_client: TestClient, family_factory, test_db):
+
+def test_basic_script_tag_stored_as_literal_or_rejected(
+    test_client: TestClient, family_factory, test_db
+):
     """Verify that a basic script tag is either rejected or echoed back as a literal, safe string."""
     payload = "<script>alert('xss')</script>"
     family, token = family_factory(test_db)
@@ -172,7 +185,9 @@ def test_basic_script_tag_stored_as_literal_or_rejected(test_client: TestClient,
         assert response.status_code == 422
 
 
-def test_onerror_attribute_stored_as_literal_or_rejected(test_client: TestClient, family_factory, test_db):
+def test_onerror_attribute_stored_as_literal_or_rejected(
+    test_client: TestClient, family_factory, test_db
+):
     """Verify that an onerror event attribute in input is either rejected or stored as literal text."""
     payload = "<img onerror=alert(document.cookie) src=x>"
     response = test_client.post(
@@ -190,7 +205,9 @@ def test_onerror_attribute_stored_as_literal_or_rejected(test_client: TestClient
         assert response.status_code == 422
 
 
-def test_javascript_protocol_in_user_name_handled_safely(test_client: TestClient, family_factory, test_db):
+def test_javascript_protocol_in_user_name_handled_safely(
+    test_client: TestClient, family_factory, test_db
+):
     """Verify that a javascript: protocol string in user name is rejected or stored as literal."""
     family, token = family_factory(test_db)
     payload = "javascript:alert(document.domain)"
@@ -203,7 +220,9 @@ def test_javascript_protocol_in_user_name_handled_safely(test_client: TestClient
     _assert_payload_handled(response, payload)
 
 
-def test_svg_onload_in_ingredient_handled_safely(test_client: TestClient, family_factory, user_factory, test_db):
+def test_svg_onload_in_ingredient_handled_safely(
+    test_client: TestClient, family_factory, user_factory, test_db
+):
     """Verify that an SVG onload payload in ingredient text is handled safely."""
     family, token = family_factory(test_db)
     user = user_factory(test_db, family_id=family.id)

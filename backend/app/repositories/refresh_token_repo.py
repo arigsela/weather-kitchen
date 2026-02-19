@@ -35,9 +35,13 @@ class RefreshTokenRepository:
     def get_by_token(self, token: str) -> RefreshToken | None:
         """Lookup a refresh token record by plaintext token (hashed for lookup)."""
         token_hash = hash_refresh_token(token)
-        return self.db.query(RefreshToken).filter(
-            RefreshToken.token_hash == token_hash,
-        ).first()
+        return (
+            self.db.query(RefreshToken)
+            .filter(
+                RefreshToken.token_hash == token_hash,
+            )
+            .first()
+        )
 
     def revoke(self, token: str) -> bool:
         """Revoke a single refresh token. Returns True if found and revoked."""
@@ -51,10 +55,14 @@ class RefreshTokenRepository:
 
     def revoke_all_for_family(self, family_id: UUID) -> int:
         """Revoke all active refresh tokens for a family. Returns count revoked."""
-        records = self.db.query(RefreshToken).filter(
-            RefreshToken.family_id == family_id,
-            RefreshToken.revoked == False,  # noqa: E712
-        ).all()
+        records = (
+            self.db.query(RefreshToken)
+            .filter(
+                RefreshToken.family_id == family_id,
+                RefreshToken.revoked == False,  # noqa: E712
+            )
+            .all()
+        )
         for record in records:
             record.revoked = True
         self.db.flush()
@@ -63,9 +71,13 @@ class RefreshTokenRepository:
     def cleanup_expired(self) -> int:
         """Delete expired and revoked tokens. Returns count deleted."""
         now = datetime.now(UTC)
-        records = self.db.query(RefreshToken).filter(
-            (RefreshToken.expires_at < now) | (RefreshToken.revoked == True)  # noqa: E712
-        ).all()
+        records = (
+            self.db.query(RefreshToken)
+            .filter(
+                (RefreshToken.expires_at < now) | (RefreshToken.revoked == True)  # noqa: E712
+            )
+            .all()
+        )
         for record in records:
             self.db.delete(record)
         self.db.flush()

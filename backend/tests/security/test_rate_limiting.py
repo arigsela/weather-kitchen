@@ -14,6 +14,7 @@ from fastapi.testclient import TestClient
 # General rate limiting (10 req/sec per IP)
 # ---------------------------------------------------------------------------
 
+
 def test_rapid_requests_to_health_trigger_429(test_client: TestClient):
     """Test that sending 15 rapid requests to /health causes at least one 429 response."""
     status_codes = []
@@ -54,12 +55,8 @@ def test_429_response_body_has_error_message(test_client: TestClient):
             assert "detail" in body or "message" in body or "error" in body, (
                 f"429 response body missing error message. Body: {body}"
             )
-            message_text = (
-                body.get("detail") or body.get("message") or body.get("error") or ""
-            )
-            assert len(str(message_text)) > 0, (
-                f"429 response error message is empty. Body: {body}"
-            )
+            message_text = body.get("detail") or body.get("message") or body.get("error") or ""
+            assert len(str(message_text)) > 0, f"429 response error message is empty. Body: {body}"
             return
 
     assert False, "Rate limiter never returned 429 within 20 rapid requests."
@@ -78,6 +75,7 @@ def test_rate_limit_recovers_after_window(test_client: TestClient, family_factor
 # ---------------------------------------------------------------------------
 # PIN endpoint rate limiting (5 req / 15 min per IP)
 # ---------------------------------------------------------------------------
+
 
 def test_rapid_pin_verify_requests_trigger_429(test_client: TestClient, family_factory, test_db):
     """Test that sending 10 rapid POST requests to verify-pin causes at least one 429 response."""
@@ -120,7 +118,9 @@ def test_rapid_token_rotate_requests_trigger_429(test_client: TestClient, family
     )
 
 
-def test_pin_endpoint_429_includes_retry_after_header(test_client: TestClient, family_factory, test_db):
+def test_pin_endpoint_429_includes_retry_after_header(
+    test_client: TestClient, family_factory, test_db
+):
     """Test that a 429 from a PIN endpoint includes a Retry-After header."""
     family, token = family_factory(test_db, admin_pin="1234")
     headers = {"Authorization": f"Bearer {token}"}

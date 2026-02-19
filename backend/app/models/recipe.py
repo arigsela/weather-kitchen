@@ -30,7 +30,9 @@ class Recipe(DeclarativeBase):
     version_added = Column(String(10), nullable=False, default="1.0.0")
 
     # Relationships
-    ingredients = relationship("RecipeIngredient", back_populates="recipe", cascade="all, delete-orphan")
+    ingredients = relationship(
+        "RecipeIngredient", back_populates="recipe", cascade="all, delete-orphan"
+    )
     steps = relationship("RecipeStep", back_populates="recipe", cascade="all, delete-orphan")
     tags = relationship("RecipeTag", back_populates="recipe", cascade="all, delete-orphan")
     favorites = relationship("UserFavorite", back_populates="recipe", cascade="all, delete-orphan")
@@ -47,9 +49,7 @@ class RecipeIngredient(DeclarativeBase):
     """Recipe ingredient - individual ingredient for a recipe."""
 
     __tablename__ = "recipe_ingredients"
-    __table_args__ = (
-        Index("ix_recipe_ingredients_recipe_id", "recipe_id"),
-    )
+    __table_args__ = (Index("ix_recipe_ingredients_recipe_id", "recipe_id"),)
 
     # UUID primary key
     id = Column(GUID, primary_key=True, default=uuid.uuid4, nullable=False)
@@ -76,9 +76,7 @@ class RecipeStep(DeclarativeBase):
     """Recipe step - individual cooking step for a recipe."""
 
     __tablename__ = "recipe_steps"
-    __table_args__ = (
-        Index("ix_recipe_steps_recipe_id", "recipe_id"),
-    )
+    __table_args__ = (Index("ix_recipe_steps_recipe_id", "recipe_id"),)
 
     # UUID primary key
     id = Column(GUID, primary_key=True, default=uuid.uuid4, nullable=False)

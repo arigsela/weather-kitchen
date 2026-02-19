@@ -11,6 +11,7 @@ from app.auth.jwt import create_access_token, create_refresh_token, decode_token
 # Access token tests
 # ---------------------------------------------------------------------------
 
+
 def test_valid_access_token_grants_access(test_client: TestClient, family_factory, test_db):
     """A freshly issued access token should grant access to a protected endpoint."""
     family, access_token = family_factory(test_db)
@@ -21,7 +22,9 @@ def test_valid_access_token_grants_access(test_client: TestClient, family_factor
     assert response.status_code == 200
 
 
-def test_access_token_with_wrong_signature_rejected(test_client: TestClient, family_factory, test_db):
+def test_access_token_with_wrong_signature_rejected(
+    test_client: TestClient, family_factory, test_db
+):
     """A JWT signed with a different secret should be rejected."""
     family, access_token = family_factory(test_db)
     # Tamper the signature (last segment after the second dot)
@@ -34,11 +37,14 @@ def test_access_token_with_wrong_signature_rejected(test_client: TestClient, fam
     assert response.status_code == 401
 
 
-def test_access_token_with_tampered_payload_rejected(test_client: TestClient, family_factory, test_db):
+def test_access_token_with_tampered_payload_rejected(
+    test_client: TestClient, family_factory, test_db
+):
     """Modifying the payload invalidates the HMAC signature → rejected."""
     family, access_token = family_factory(test_db)
     import base64
     import json
+
     parts = access_token.split(".")
     # Decode payload (add padding)
     payload_json = base64.urlsafe_b64decode(parts[1] + "==").decode()
@@ -91,6 +97,7 @@ def test_malformed_jwt_string_rejected(test_client: TestClient, family_factory, 
 # ---------------------------------------------------------------------------
 # Refresh token endpoint tests
 # ---------------------------------------------------------------------------
+
 
 def test_refresh_endpoint_returns_new_token_pair(test_client: TestClient):
     """POST /auth/refresh with valid refresh token returns new access + refresh tokens."""
@@ -149,6 +156,7 @@ def test_access_token_as_refresh_token_rejected(test_client: TestClient, family_
 # Logout tests
 # ---------------------------------------------------------------------------
 
+
 def test_logout_revokes_refresh_token(test_client: TestClient):
     """POST /auth/logout revokes the refresh token — subsequent refresh fails."""
     create_resp = test_client.post(
@@ -180,6 +188,7 @@ def test_logout_with_invalid_token_still_returns_200(test_client: TestClient):
 # JWT claim validation
 # ---------------------------------------------------------------------------
 
+
 def test_jwt_decode_access_token_has_correct_claims(family_factory, test_db):
     """Access token contains expected claims: sub, type=access, iat, exp."""
     _, access_token = family_factory(test_db)
@@ -195,6 +204,7 @@ def test_jwt_decode_refresh_token_has_jti_claim(family_factory, test_db):
     _, access_token = family_factory(test_db)
     # Get a refresh token by creating a family via the service
     from app.auth.jwt import create_refresh_token
+
     refresh_token, _ = create_refresh_token("test-family-id")
     payload = decode_token(refresh_token)
     assert payload["type"] == "refresh"

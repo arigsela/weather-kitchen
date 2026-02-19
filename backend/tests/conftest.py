@@ -53,14 +53,17 @@ def test_client(test_db):
 @pytest.fixture
 def auth_headers():
     """Helper to create authorization headers."""
+
     def _auth_headers(token: str = "test-token") -> dict:
         return {"Authorization": f"Bearer {token}"}
+
     return _auth_headers
 
 
 @pytest.fixture
 def family_factory(test_db):
     """Factory for creating test families."""
+
     def _create_family(
         db: Session = None,
         name: str = "Test Family",
@@ -74,6 +77,7 @@ def family_factory(test_db):
             db = test_db
 
         from app.services.family_service import FamilyService
+
         service = FamilyService(db)
         response, access_token, refresh_token = service.create_family(
             name=name,
@@ -92,6 +96,7 @@ def family_factory(test_db):
 @pytest.fixture
 def user_factory():
     """Factory for creating test users."""
+
     def _create_user(
         db: Session,
         family_id,
@@ -117,6 +122,7 @@ def user_factory():
 @pytest.fixture
 def recipe_factory():
     """Factory for creating test recipes."""
+
     def _create_recipe(
         db: Session,
         name: str = "Test Recipe",

@@ -97,6 +97,7 @@ class TestRecipeEndpoints:
     def test_get_recipe_not_found(self, test_client):
         """Test getting non-existent recipe."""
         import uuid
+
         fake_id = uuid.uuid4()
 
         response = test_client.get(f"/api/v1/recipes/{fake_id}")

@@ -46,16 +46,19 @@ class RecipeListItem(BaseModel):
     category: str = Field(..., max_length=20, description="Recipe category")
     serves: int = Field(..., description="Base serving size")
 
-    model_config = ConfigDict(from_attributes=True, examples=[
-        {
-            "id": "550e8400-e29b-41d4-a716-446655440000",
-            "name": "Sunny Pasta",
-            "emoji": "☀️",
-            "weather": "sunny",
-            "category": "lunch",
-            "serves": 4,
-        }
-    ])
+    model_config = ConfigDict(
+        from_attributes=True,
+        examples=[
+            {
+                "id": "550e8400-e29b-41d4-a716-446655440000",
+                "name": "Sunny Pasta",
+                "emoji": "☀️",
+                "weather": "sunny",
+                "category": "lunch",
+                "serves": 4,
+            }
+        ],
+    )
 
 
 class RecipeResponse(BaseModel):
@@ -70,32 +73,43 @@ class RecipeResponse(BaseModel):
     category: str = Field(..., max_length=20, description="Recipe category")
     serves: int = Field(..., description="Base serving size")
     version_added: str = Field(..., max_length=10, description="Version recipe was added")
-    ingredients: list[RecipeIngredientResponse] = Field(default_factory=list, description="Recipe ingredients")
+    ingredients: list[RecipeIngredientResponse] = Field(
+        default_factory=list, description="Recipe ingredients"
+    )
     steps: list[RecipeStepResponse] = Field(default_factory=list, description="Cooking steps")
     tags: list[RecipeTagResponse] = Field(default_factory=list, description="Recipe tags")
 
-    model_config = ConfigDict(from_attributes=True, examples=[
-        {
-            "id": "550e8400-e29b-41d4-a716-446655440000",
-            "name": "Sunny Pasta",
-            "emoji": "☀️",
-            "why": "Light and fresh for sunny days",
-            "tip": "Use fresh basil",
-            "weather": "sunny",
-            "category": "lunch",
-            "serves": 4,
-            "version_added": "1.0.0",
-            "ingredients": [
-                {"id": "550e8400-e29b-41d4-a716-446655440001", "sort_order": 1, "ingredient_text": "400g pasta"}
-            ],
-            "steps": [
-                {"id": "550e8400-e29b-41d4-a716-446655440002", "step_number": 1, "step_text": "Boil pasta"}
-            ],
-            "tags": [
-                {"id": "550e8400-e29b-41d4-a716-446655440003", "tag": "vegetarian"}
-            ],
-        }
-    ])
+    model_config = ConfigDict(
+        from_attributes=True,
+        examples=[
+            {
+                "id": "550e8400-e29b-41d4-a716-446655440000",
+                "name": "Sunny Pasta",
+                "emoji": "☀️",
+                "why": "Light and fresh for sunny days",
+                "tip": "Use fresh basil",
+                "weather": "sunny",
+                "category": "lunch",
+                "serves": 4,
+                "version_added": "1.0.0",
+                "ingredients": [
+                    {
+                        "id": "550e8400-e29b-41d4-a716-446655440001",
+                        "sort_order": 1,
+                        "ingredient_text": "400g pasta",
+                    }
+                ],
+                "steps": [
+                    {
+                        "id": "550e8400-e29b-41d4-a716-446655440002",
+                        "step_number": 1,
+                        "step_text": "Boil pasta",
+                    }
+                ],
+                "tags": [{"id": "550e8400-e29b-41d4-a716-446655440003", "tag": "vegetarian"}],
+            }
+        ],
+    )
 
 
 class RecipeListResponse(BaseModel):
@@ -106,23 +120,25 @@ class RecipeListResponse(BaseModel):
     offset: int = Field(..., description="Number of items skipped")
     items: list[RecipeListItem] = Field(..., description="List of recipes")
 
-    model_config = ConfigDict(examples=[
-        {
-            "total": 1020,
-            "limit": 20,
-            "offset": 0,
-            "items": [
-                {
-                    "id": "550e8400-e29b-41d4-a716-446655440000",
-                    "name": "Sunny Pasta",
-                    "emoji": "☀️",
-                    "weather": "sunny",
-                    "category": "lunch",
-                    "serves": 4,
-                }
-            ],
-        }
-    ])
+    model_config = ConfigDict(
+        examples=[
+            {
+                "total": 1020,
+                "limit": 20,
+                "offset": 0,
+                "items": [
+                    {
+                        "id": "550e8400-e29b-41d4-a716-446655440000",
+                        "name": "Sunny Pasta",
+                        "emoji": "☀️",
+                        "weather": "sunny",
+                        "category": "lunch",
+                        "serves": 4,
+                    }
+                ],
+            }
+        ]
+    )
 
     @property
     def has_next(self) -> bool:

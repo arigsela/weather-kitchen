@@ -25,7 +25,9 @@ async def list_recipes(
     weather: str | None = Query(None, description="Filter by weather type"),
     category: str | None = Query(None, description="Filter by category"),
     tags: list[str] | None = Query(None, description="Filter by tags (comma-separated)"),
-    ingredients: list[str] | None = Query(None, description="Filter by ingredients (comma-separated)"),
+    ingredients: list[str] | None = Query(
+        None, description="Filter by ingredients (comma-separated)"
+    ),
     limit: int = Query(20, ge=1, le=100, description="Items per page"),
     offset: int = Query(0, ge=0, description="Items to skip"),
     db: Session = Depends(get_db),

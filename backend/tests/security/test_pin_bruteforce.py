@@ -83,7 +83,9 @@ def test_five_failures_triggers_lockout(test_client: TestClient, family_factory,
         assert response.json()["success"] is False
 
 
-def test_locked_family_returns_lockout_or_rate_limit(test_client: TestClient, family_factory, test_db):
+def test_locked_family_returns_lockout_or_rate_limit(
+    test_client: TestClient, family_factory, test_db
+):
     """Test that after 5 failures, subsequent attempts are blocked by lockout or rate limiter."""
     family, token = family_factory(test_db, admin_pin="1234")
     headers = {"Authorization": f"Bearer {token}"}
@@ -150,7 +152,9 @@ def test_non_numeric_pin_rejected_with_422(test_client: TestClient, family_facto
     assert response.status_code == 422
 
 
-def test_pin_longer_than_six_digits_rejected_with_422(test_client: TestClient, family_factory, test_db):
+def test_pin_longer_than_six_digits_rejected_with_422(
+    test_client: TestClient, family_factory, test_db
+):
     """Test that a PIN longer than 6 digits is rejected with 422 validation error."""
     family, token = family_factory(test_db, admin_pin="1234")
 
@@ -162,7 +166,9 @@ def test_pin_longer_than_six_digits_rejected_with_422(test_client: TestClient, f
     assert response.status_code == 422
 
 
-def test_pin_shorter_than_four_digits_rejected_with_422(test_client: TestClient, family_factory, test_db):
+def test_pin_shorter_than_four_digits_rejected_with_422(
+    test_client: TestClient, family_factory, test_db
+):
     """Test that a PIN shorter than 4 digits is rejected with 422 validation error."""
     family, token = family_factory(test_db, admin_pin="1234")
 

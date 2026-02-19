@@ -75,10 +75,14 @@ async def get_current_family(
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    family = db.query(Family).filter(
-        Family.id == family_id,
-        Family.is_active == True,  # noqa: E712
-    ).first()
+    family = (
+        db.query(Family)
+        .filter(
+            Family.id == family_id,
+            Family.is_active == True,  # noqa: E712
+        )
+        .first()
+    )
 
     if not family:
         raise HTTPException(
@@ -129,6 +133,7 @@ async def require_pin(
         family.pin_attempts += 1
         if family.pin_attempts >= 5:
             from datetime import timedelta
+
             family.pin_locked_until = datetime.now(UTC) + timedelta(minutes=15)
         db.add(family)
         db.flush()

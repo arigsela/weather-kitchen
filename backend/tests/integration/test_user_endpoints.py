@@ -68,7 +68,9 @@ def test_get_user_details(test_client: TestClient, family_factory, user_factory,
     assert data["name"] == "Test User"
 
 
-def test_get_user_without_ownership_returns_404(test_client: TestClient, family_factory, user_factory, test_db):
+def test_get_user_without_ownership_returns_404(
+    test_client: TestClient, family_factory, user_factory, test_db
+):
     """Test that accessing user from different family returns 404."""
     family1, token1 = family_factory(test_db, name="Family 1")
     family2, token2 = family_factory(test_db, name="Family 2")
@@ -98,7 +100,9 @@ def test_get_user_ingredients_empty(test_client: TestClient, family_factory, use
     assert data["ingredients"] == []
 
 
-def test_update_ingredients_replaces_all(test_client: TestClient, family_factory, user_factory, test_db):
+def test_update_ingredients_replaces_all(
+    test_client: TestClient, family_factory, user_factory, test_db
+):
     """Test PUT /users/{id}/ingredients replaces all ingredients."""
     family, token = family_factory(test_db)
     user = user_factory(test_db, family_id=family.id)
@@ -115,7 +119,9 @@ def test_update_ingredients_replaces_all(test_client: TestClient, family_factory
     assert set(data["ingredients"]) == {"apple", "banana", "milk"}
 
 
-def test_update_ingredients_is_idempotent(test_client: TestClient, family_factory, user_factory, test_db):
+def test_update_ingredients_is_idempotent(
+    test_client: TestClient, family_factory, user_factory, test_db
+):
     """Test updating ingredients is idempotent (PUT semantics)."""
     family, token = family_factory(test_db)
     user = user_factory(test_db, family_id=family.id)
@@ -139,7 +145,9 @@ def test_update_ingredients_is_idempotent(test_client: TestClient, family_factor
     assert set(data["ingredients"]) == {"apple", "banana"}
 
 
-def test_update_ingredients_replaces_previous(test_client: TestClient, family_factory, user_factory, test_db):
+def test_update_ingredients_replaces_previous(
+    test_client: TestClient, family_factory, user_factory, test_db
+):
     """Test that updating ingredients removes previous ones."""
     family, token = family_factory(test_db)
     user = user_factory(test_db, family_id=family.id)
@@ -181,7 +189,9 @@ def test_get_user_favorites_empty(test_client: TestClient, family_factory, user_
     assert data["favorites"] == []
 
 
-def test_add_favorite_recipe(test_client: TestClient, family_factory, user_factory, recipe_factory, test_db):
+def test_add_favorite_recipe(
+    test_client: TestClient, family_factory, user_factory, recipe_factory, test_db
+):
     """Test PUT /users/{id}/favorites/{recipe_id} adds recipe."""
     family, token = family_factory(test_db)
     user = user_factory(test_db, family_id=family.id)
@@ -199,7 +209,9 @@ def test_add_favorite_recipe(test_client: TestClient, family_factory, user_facto
     assert data["recipe_name"] == "Pancakes"
 
 
-def test_add_favorite_idempotent(test_client: TestClient, family_factory, user_factory, recipe_factory, test_db):
+def test_add_favorite_idempotent(
+    test_client: TestClient, family_factory, user_factory, recipe_factory, test_db
+):
     """Test adding same favorite twice is idempotent."""
     family, token = family_factory(test_db)
     user = user_factory(test_db, family_id=family.id)
@@ -222,7 +234,9 @@ def test_add_favorite_idempotent(test_client: TestClient, family_factory, user_f
     assert response2.json()["id"] == fav_id
 
 
-def test_get_favorites_lists_added(test_client: TestClient, family_factory, user_factory, recipe_factory, test_db):
+def test_get_favorites_lists_added(
+    test_client: TestClient, family_factory, user_factory, recipe_factory, test_db
+):
     """Test GET /users/{id}/favorites lists added favorites."""
     family, token = family_factory(test_db)
     user = user_factory(test_db, family_id=family.id)
@@ -251,7 +265,9 @@ def test_get_favorites_lists_added(test_client: TestClient, family_factory, user
     assert len(data["favorites"]) == 2
 
 
-def test_remove_favorite_recipe(test_client: TestClient, family_factory, user_factory, recipe_factory, test_db):
+def test_remove_favorite_recipe(
+    test_client: TestClient, family_factory, user_factory, recipe_factory, test_db
+):
     """Test DELETE /users/{id}/favorites/{recipe_id} removes recipe."""
     family, token = family_factory(test_db)
     user = user_factory(test_db, family_id=family.id)
@@ -279,7 +295,9 @@ def test_remove_favorite_recipe(test_client: TestClient, family_factory, user_fa
     assert response.json()["total"] == 0
 
 
-def test_remove_favorite_idempotent(test_client: TestClient, family_factory, user_factory, recipe_factory, test_db):
+def test_remove_favorite_idempotent(
+    test_client: TestClient, family_factory, user_factory, recipe_factory, test_db
+):
     """Test that removing non-existent favorite is idempotent."""
     family, token = family_factory(test_db)
     user = user_factory(test_db, family_id=family.id)

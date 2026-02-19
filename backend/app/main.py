@@ -42,7 +42,7 @@ async def lifespan(app: FastAPI):
         if settings.environment == "production":
             raise RuntimeError(
                 "JWT_SECRET_KEY must be set to a secure value in production. "
-                "Generate one with: python -c \"import secrets; print(secrets.token_hex(32))\""
+                'Generate one with: python -c "import secrets; print(secrets.token_hex(32))"'
             )
         logger.warning(
             "JWT_SECRET_KEY is using the insecure dev default. "

@@ -60,11 +60,13 @@ engine = create_engine(
 
 # Enable SQLite WAL mode for concurrent read/write
 if "sqlite" in settings.database_url:
+
     @event.listens_for(engine, "connect")
     def set_sqlite_pragma(dbapi_conn, connection_record):
         cursor = dbapi_conn.cursor()
         cursor.execute("PRAGMA journal_mode=WAL")
         cursor.close()
+
 
 # Session factory
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)

@@ -123,7 +123,9 @@ class UserService:
             total=len(favorites),
         )
 
-    def add_favorite(self, user_id: UUID, family_id: UUID, recipe_id: UUID) -> FavoriteResponse | None:
+    def add_favorite(
+        self, user_id: UUID, family_id: UUID, recipe_id: UUID
+    ) -> FavoriteResponse | None:
         """Add recipe to favorites (idempotent)."""
         favorite = self.repository.add_favorite(user_id, family_id, recipe_id)
         if not favorite:

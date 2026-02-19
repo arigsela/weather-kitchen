@@ -66,10 +66,10 @@ class RateLimiterMiddleware(BaseHTTPMiddleware):
                     "error": {
                         "code": "RATE_LIMIT_EXCEEDED",
                         "message": f"Too many requests. Retry after {retry_after:.0f} seconds.",
-                        "details": []
+                        "details": [],
                     }
                 },
-                headers={"Retry-After": f"{retry_after:.0f}"}
+                headers={"Retry-After": f"{retry_after:.0f}"},
             )
 
         # Record this request
@@ -109,7 +109,8 @@ class RateLimiterMiddleware(BaseHTTPMiddleware):
 
         # Keep only requests within the current window
         self.request_history[client_ip] = [
-            (timestamp, path) for timestamp, path in self.request_history[client_ip]
+            (timestamp, path)
+            for timestamp, path in self.request_history[client_ip]
             if current_time - timestamp <= window
         ]
 

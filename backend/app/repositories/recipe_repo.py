@@ -113,9 +113,12 @@ class RecipeRepository(BaseRepository[Recipe]):
         total = self.db.execute(count_query).scalar() or 0
 
         # Apply pagination and execute
-        recipes = self.db.execute(
-            query.order_by(Recipe.name).limit(limit).offset(offset)
-        ).scalars().unique().all()
+        recipes = (
+            self.db.execute(query.order_by(Recipe.name).limit(limit).offset(offset))
+            .scalars()
+            .unique()
+            .all()
+        )
 
         return recipes, total
 
@@ -126,10 +129,9 @@ class RecipeRepository(BaseRepository[Recipe]):
         Returns:
             Dict mapping weather type to count
         """
-        query = select(
-            Recipe.weather,
-            func.count(Recipe.id).label("count")
-        ).group_by(Recipe.weather)
+        query = select(Recipe.weather, func.count(Recipe.id).label("count")).group_by(
+            Recipe.weather
+        )
 
         results = self.db.execute(query).all()
         return {weather: count for weather, count in results}
@@ -142,16 +144,11 @@ class RecipeRepository(BaseRepository[Recipe]):
             Dict mapping category to list of (tag, count) tuples
         """
         # Get all tags with their counts grouped by category
-        query = select(
-            Recipe.category,
-            RecipeTag.tag,
-            func.count(Recipe.id).label("count")
-        ).join(
-            RecipeTag, Recipe.id == RecipeTag.recipe_id
-        ).group_by(
-            Recipe.category, RecipeTag.tag
-        ).order_by(
-            Recipe.category, RecipeTag.tag
+        query = (
+            select(Recipe.category, RecipeTag.tag, func.count(Recipe.id).label("count"))
+            .join(RecipeTag, Recipe.id == RecipeTag.recipe_id)
+            .group_by(Recipe.category, RecipeTag.tag)
+            .order_by(Recipe.category, RecipeTag.tag)
         )
 
         results = self.db.execute(query).all()
@@ -176,13 +173,16 @@ class RecipeRepository(BaseRepository[Recipe]):
         Returns:
             List of matching recipes
         """
-        query = select(Recipe).options(
-            selectinload(Recipe.ingredients),
-            selectinload(Recipe.steps),
-            selectinload(Recipe.tags),
-        ).where(
-            Recipe.name.ilike(f"%{query_text}%")
-        ).limit(limit)
+        query = (
+            select(Recipe)
+            .options(
+                selectinload(Recipe.ingredients),
+                selectinload(Recipe.steps),
+                selectinload(Recipe.tags),
+            )
+            .where(Recipe.name.ilike(f"%{query_text}%"))
+            .limit(limit)
+        )
 
         return self.db.execute(query).scalars().all()
 

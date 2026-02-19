@@ -15,9 +15,7 @@ class User(DeclarativeBase):
     """User entity - individual user within a family."""
 
     __tablename__ = "users"
-    __table_args__ = (
-        Index("ix_users_family_id", "family_id"),
-    )
+    __table_args__ = (Index("ix_users_family_id", "family_id"),)
 
     # UUID primary key
     id = Column(GUID, primary_key=True, default=uuid.uuid4, nullable=False)
@@ -32,7 +30,9 @@ class User(DeclarativeBase):
 
     # Relationships
     family = relationship("Family", back_populates="users")
-    ingredients = relationship("UserIngredient", back_populates="user", cascade="all, delete-orphan")
+    ingredients = relationship(
+        "UserIngredient", back_populates="user", cascade="all, delete-orphan"
+    )
     favorites = relationship("UserFavorite", back_populates="user", cascade="all, delete-orphan")
 
     # Timestamps
@@ -47,9 +47,7 @@ class UserIngredient(DeclarativeBase):
     """User ingredient - normalized lowercase ingredient tag for a user."""
 
     __tablename__ = "user_ingredients"
-    __table_args__ = (
-        Index("ix_user_ingredients", "user_id", "ingredient_name", unique=True),
-    )
+    __table_args__ = (Index("ix_user_ingredients", "user_id", "ingredient_name", unique=True),)
 
     # UUID primary key
     id = Column(GUID, primary_key=True, default=uuid.uuid4, nullable=False)
@@ -59,8 +57,16 @@ class UserIngredient(DeclarativeBase):
 
     # Data (normalized lowercase)
     ingredient_name = Column(String(50), nullable=False)
-    created_at = Column(DateTime, default=lambda: __import__('datetime').datetime.now(__import__('datetime').timezone.utc), nullable=False)
-    updated_at = Column(DateTime, default=lambda: __import__('datetime').datetime.now(__import__('datetime').timezone.utc), nullable=False)
+    created_at = Column(
+        DateTime,
+        default=lambda: __import__("datetime").datetime.now(__import__("datetime").timezone.utc),
+        nullable=False,
+    )
+    updated_at = Column(
+        DateTime,
+        default=lambda: __import__("datetime").datetime.now(__import__("datetime").timezone.utc),
+        nullable=False,
+    )
 
     # Relationship
     user = relationship("User", back_populates="ingredients")
@@ -73,9 +79,7 @@ class UserFavorite(DeclarativeBase):
     """User favorite - recipe favorited by a user."""
 
     __tablename__ = "user_favorites"
-    __table_args__ = (
-        Index("ix_user_favorites", "user_id", "recipe_id", unique=True),
-    )
+    __table_args__ = (Index("ix_user_favorites", "user_id", "recipe_id", unique=True),)
 
     # UUID primary key
     id = Column(GUID, primary_key=True, default=uuid.uuid4, nullable=False)
@@ -85,7 +89,11 @@ class UserFavorite(DeclarativeBase):
     recipe_id = Column(GUID, ForeignKey("recipes.id", ondelete="CASCADE"), nullable=False)
 
     # Data
-    added_at = Column(DateTime, default=lambda: __import__('datetime').datetime.now(__import__('datetime').timezone.utc), nullable=False)
+    added_at = Column(
+        DateTime,
+        default=lambda: __import__("datetime").datetime.now(__import__("datetime").timezone.utc),
+        nullable=False,
+    )
 
     # Relationships
     user = relationship("User", back_populates="favorites")

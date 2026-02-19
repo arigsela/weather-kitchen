@@ -148,6 +148,7 @@ class AuditService:
 # Background-task helper
 # ---------------------------------------------------------------------------
 
+
 def _audit_log_background(
     action: str,
     entity_type: str,

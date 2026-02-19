@@ -11,10 +11,13 @@ from pydantic import BaseModel, ConfigDict, Field
 # PIN schemas
 # ---------------------------------------------------------------------------
 
+
 class PinVerifyRequest(BaseModel):
     """Verify PIN request."""
 
-    admin_pin: str = Field(..., min_length=4, max_length=6, pattern=r"^\d+$", description="4-6 digit numeric PIN")
+    admin_pin: str = Field(
+        ..., min_length=4, max_length=6, pattern=r"^\d+$", description="4-6 digit numeric PIN"
+    )
 
     model_config = ConfigDict(examples=[{"admin_pin": "1234"}])
 
@@ -24,17 +27,26 @@ class PinVerifyResponse(BaseModel):
 
     success: bool = Field(..., description="Whether PIN was correct")
     message: str = Field(..., description="Status message")
-    lockout_until: datetime | None = Field(None, description="Timestamp when lockout expires (if locked)")
+    lockout_until: datetime | None = Field(
+        None, description="Timestamp when lockout expires (if locked)"
+    )
 
-    model_config = ConfigDict(examples=[
-        {"success": True, "message": "PIN verified successfully", "lockout_until": None},
-        {"success": False, "message": "PIN incorrect (4 attempts remaining)", "lockout_until": None},
-    ])
+    model_config = ConfigDict(
+        examples=[
+            {"success": True, "message": "PIN verified successfully", "lockout_until": None},
+            {
+                "success": False,
+                "message": "PIN incorrect (4 attempts remaining)",
+                "lockout_until": None,
+            },
+        ]
+    )
 
 
 # ---------------------------------------------------------------------------
 # JWT token schemas
 # ---------------------------------------------------------------------------
+
 
 class TokenResponse(BaseModel):
     """JWT token pair returned on login or refresh."""
@@ -44,14 +56,16 @@ class TokenResponse(BaseModel):
     token_type: str = Field(default="bearer", description="Token type")
     expires_in: int = Field(..., description="Access token TTL in seconds")
 
-    model_config = ConfigDict(examples=[
-        {
-            "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-            "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-            "token_type": "bearer",
-            "expires_in": 900,
-        }
-    ])
+    model_config = ConfigDict(
+        examples=[
+            {
+                "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+                "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+                "token_type": "bearer",
+                "expires_in": 900,
+            }
+        ]
+    )
 
 
 class RefreshRequest(BaseModel):
@@ -59,9 +73,9 @@ class RefreshRequest(BaseModel):
 
     refresh_token: str = Field(..., description="Valid refresh token")
 
-    model_config = ConfigDict(examples=[
-        {"refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."}
-    ])
+    model_config = ConfigDict(
+        examples=[{"refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."}]
+    )
 
 
 class LogoutRequest(BaseModel):
@@ -69,19 +83,22 @@ class LogoutRequest(BaseModel):
 
     refresh_token: str = Field(..., description="Refresh token to revoke")
 
-    model_config = ConfigDict(examples=[
-        {"refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."}
-    ])
+    model_config = ConfigDict(
+        examples=[{"refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."}]
+    )
 
 
 # ---------------------------------------------------------------------------
 # Token rotation schemas (PIN-protected)
 # ---------------------------------------------------------------------------
 
+
 class TokenRotateRequest(BaseModel):
     """Revoke all refresh tokens and issue new pair (requires PIN)."""
 
-    admin_pin: str = Field(..., min_length=4, max_length=6, pattern=r"^\d+$", description="4-6 digit numeric PIN")
+    admin_pin: str = Field(
+        ..., min_length=4, max_length=6, pattern=r"^\d+$", description="4-6 digit numeric PIN"
+    )
 
     model_config = ConfigDict(examples=[{"admin_pin": "1234"}])
 
@@ -94,23 +111,28 @@ class TokenRotateResponse(BaseModel):
     refresh_token: str = Field(..., description="New JWT refresh token")
     token_type: str = Field(default="bearer", description="Token type")
     expires_in: int = Field(default=900, description="Access token TTL in seconds")
-    message: str = Field(default="All previous tokens are now invalid.", description="Warning message")
+    message: str = Field(
+        default="All previous tokens are now invalid.", description="Warning message"
+    )
 
-    model_config = ConfigDict(examples=[
-        {
-            "family_id": "550e8400-e29b-41d4-a716-446655440000",
-            "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-            "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-            "token_type": "bearer",
-            "expires_in": 900,
-            "message": "All previous tokens are now invalid.",
-        }
-    ])
+    model_config = ConfigDict(
+        examples=[
+            {
+                "family_id": "550e8400-e29b-41d4-a716-446655440000",
+                "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+                "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+                "token_type": "bearer",
+                "expires_in": 900,
+                "message": "All previous tokens are now invalid.",
+            }
+        ]
+    )
 
 
 # ---------------------------------------------------------------------------
 # Generic response
 # ---------------------------------------------------------------------------
+
 
 class SuccessResponse(BaseModel):
     """Generic success response."""
@@ -118,6 +140,6 @@ class SuccessResponse(BaseModel):
     success: bool = Field(..., description="Whether operation was successful")
     message: str = Field(..., description="Status message")
 
-    model_config = ConfigDict(examples=[
-        {"success": True, "message": "Operation completed successfully"}
-    ])
+    model_config = ConfigDict(
+        examples=[{"success": True, "message": "Operation completed successfully"}]
+    )

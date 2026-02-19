@@ -52,7 +52,7 @@ class RecipeFactory:
         for i in range(count):
             recipe = RecipeFactory.create(
                 db,
-                name=f"Test Recipe {i+1}",
+                name=f"Test Recipe {i + 1}",
                 weather=weather,
                 **kwargs,
             )

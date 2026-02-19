@@ -20,9 +20,7 @@ class BaseRepository(Generic[T]):
 
     def get_by_id(self, id: UUID) -> T | None:
         """Get entity by ID."""
-        return self.db.query(self.model_class).filter(
-            self.model_class.id == id
-        ).first()
+        return self.db.query(self.model_class).filter(self.model_class.id == id).first()
 
     def get_all(self, limit: int = 100, offset: int = 0) -> list[T]:
         """Get all entities with pagination."""

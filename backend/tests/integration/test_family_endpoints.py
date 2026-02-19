@@ -209,5 +209,3 @@ def test_verify_pin_wrong_pin_fails(test_client: TestClient, family_factory, tes
     assert response.status_code == 200
     data = response.json()
     assert data["success"] is False
-
-

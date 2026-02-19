@@ -18,6 +18,7 @@ class TestRecipeService:
         )
 
         from app.services.recipe_service import RecipeService
+
         service = RecipeService(test_db)
         result = service.get_recipe(recipe.id)
 
@@ -30,6 +31,7 @@ class TestRecipeService:
         RecipeFactory.create_batch(test_db, count=5)
 
         from app.services.recipe_service import RecipeService
+
         service = RecipeService(test_db)
         result = service.list_recipes()
 
@@ -41,6 +43,7 @@ class TestRecipeService:
         RecipeFactory.create_batch(test_db, count=25)
 
         from app.services.recipe_service import RecipeService
+
         service = RecipeService(test_db)
         page1 = service.list_recipes(limit=10, offset=0)
         page2 = service.list_recipes(limit=10, offset=10)
@@ -56,6 +59,7 @@ class TestRecipeService:
         RecipeFactory.create(test_db, weather="rainy", category="lunch")
 
         from app.services.recipe_service import RecipeService
+
         service = RecipeService(test_db)
         result = service.list_recipes(weather="sunny", category="lunch")
 
@@ -69,6 +73,7 @@ class TestRecipeService:
         RecipeFactory.create(test_db, name="Rice Pilaf")
 
         from app.services.recipe_service import RecipeService
+
         service = RecipeService(test_db)
         results = service.search_recipes("Pasta")
 
@@ -81,6 +86,7 @@ class TestRecipeService:
         RecipeFactory.create_batch(test_db, count=2, weather="rainy")
 
         from app.services.recipe_service import RecipeService
+
         service = RecipeService(test_db)
         stats = service.get_weather_stats()
 
@@ -98,6 +104,7 @@ class TestRecipeService:
         RecipeTagFactory.create(test_db, r2.id, "healthy")
 
         from app.services.recipe_service import RecipeService
+
         service = RecipeService(test_db)
         result = service.get_tag_categories()
 
@@ -108,6 +115,7 @@ class TestRecipeService:
     def test_calculate_multiplier(self, test_db):
         """Test serving multiplier calculation."""
         from app.services.recipe_service import RecipeService
+
         service = RecipeService(test_db)
 
         # ceil(family_size / 2)
@@ -121,6 +129,7 @@ class TestRecipeService:
     def test_scale_recipe_serves(self, test_db):
         """Test scaling recipe by multiplier."""
         from app.services.recipe_service import RecipeService
+
         service = RecipeService(test_db)
 
         # Base serves: 4, multiplier: 2 => 8
@@ -137,6 +146,7 @@ class TestRecipeService:
         ]
 
         from app.services.recipe_service import RecipeService
+
         service = RecipeService(test_db)
         result = service.categorize_by_weather(recipes)
 
@@ -153,6 +163,7 @@ class TestRecipeService:
         )
 
         from app.services.recipe_service import RecipeService
+
         service = RecipeService(test_db)
 
         # Has all required ingredients

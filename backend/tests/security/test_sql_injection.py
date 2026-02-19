@@ -34,11 +34,11 @@ SQL_PAYLOADS = [
 # Helper
 # ---------------------------------------------------------------------------
 
+
 def _assert_no_server_error(response, payload: str) -> None:
     """Assert the server did not return a 500 Internal Server Error."""
     assert response.status_code != 500, (
-        f"Server returned 500 for SQL payload: {payload!r}\n"
-        f"Response body: {response.text}"
+        f"Server returned 500 for SQL payload: {payload!r}\nResponse body: {response.text}"
     )
 
 
@@ -53,6 +53,7 @@ def _assert_payload_handled(response, payload: str) -> None:
 # ---------------------------------------------------------------------------
 # Family name SQL injection tests
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.parametrize("payload", SQL_PAYLOADS[:8])
 def test_sql_injection_in_family_name_on_create(test_client: TestClient, payload: str):
@@ -69,7 +70,9 @@ def test_sql_injection_in_family_name_on_create(test_client: TestClient, payload
 
 
 @pytest.mark.parametrize("payload", SQL_PAYLOADS[8:])
-def test_sql_injection_in_family_name_on_update(test_client: TestClient, family_factory, test_db, payload: str):
+def test_sql_injection_in_family_name_on_update(
+    test_client: TestClient, family_factory, test_db, payload: str
+):
     """Test that SQL injection payloads in family name on update are handled safely."""
     family, token = family_factory(test_db)
 
@@ -85,6 +88,7 @@ def test_sql_injection_in_family_name_on_update(test_client: TestClient, family_
 # User name SQL injection tests
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.parametrize("payload", SQL_PAYLOADS[:8])
 def test_sql_injection_in_user_name(test_client: TestClient, family_factory, test_db, payload: str):
     """Test that SQL injection payloads in user name are handled safely."""
@@ -99,7 +103,9 @@ def test_sql_injection_in_user_name(test_client: TestClient, family_factory, tes
 
 
 @pytest.mark.parametrize("payload", SQL_PAYLOADS[8:])
-def test_sql_injection_in_user_name_additional(test_client: TestClient, family_factory, test_db, payload: str):
+def test_sql_injection_in_user_name_additional(
+    test_client: TestClient, family_factory, test_db, payload: str
+):
     """Test that additional SQL injection payloads in user name are handled safely."""
     family, token = family_factory(test_db)
 
@@ -115,8 +121,11 @@ def test_sql_injection_in_user_name_additional(test_client: TestClient, family_f
 # Ingredient text SQL injection tests
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.parametrize("payload", SQL_PAYLOADS[:8])
-def test_sql_injection_in_ingredient_text(test_client: TestClient, family_factory, user_factory, test_db, payload: str):
+def test_sql_injection_in_ingredient_text(
+    test_client: TestClient, family_factory, user_factory, test_db, payload: str
+):
     """Test that SQL injection payloads in ingredient text are handled safely."""
     family, token = family_factory(test_db)
     user = user_factory(test_db, family_id=family.id)
@@ -148,6 +157,7 @@ def test_sql_injection_in_ingredient_text_additional(
 # ---------------------------------------------------------------------------
 # Query parameter SQL injection tests
 # ---------------------------------------------------------------------------
+
 
 def test_sql_injection_in_user_list_query_does_not_cause_500(
     test_client: TestClient, family_factory, test_db
@@ -184,7 +194,10 @@ def test_sql_injection_in_path_parameter_does_not_cause_500(
 # Stored value integrity verification
 # ---------------------------------------------------------------------------
 
-def test_sql_payload_stored_as_literal_string_in_family_name(test_client: TestClient, family_factory, test_db):
+
+def test_sql_payload_stored_as_literal_string_in_family_name(
+    test_client: TestClient, family_factory, test_db
+):
     """Verify that a SQL payload stored in family name is returned verbatim without being interpreted."""
     family, token = family_factory(test_db)
     payload = "'; SELECT name FROM families; --"
@@ -203,7 +216,9 @@ def test_sql_payload_stored_as_literal_string_in_family_name(test_client: TestCl
         assert response.status_code == 422
 
 
-def test_union_select_payload_in_user_name_stored_or_rejected(test_client: TestClient, family_factory, test_db):
+def test_union_select_payload_in_user_name_stored_or_rejected(
+    test_client: TestClient, family_factory, test_db
+):
     """Verify that a UNION SELECT payload in user name is rejected or stored as literal text."""
     family, token = family_factory(test_db)
     payload = "' UNION SELECT id, api_token_hash FROM families LIMIT 1 --"
@@ -219,7 +234,9 @@ def test_union_select_payload_in_user_name_stored_or_rejected(test_client: TestC
         assert data.get("name") == payload
 
 
-def test_drop_table_payload_does_not_destroy_database(test_client: TestClient, family_factory, test_db):
+def test_drop_table_payload_does_not_destroy_database(
+    test_client: TestClient, family_factory, test_db
+):
     """Verify that a DROP TABLE payload does not destroy database state (tables remain accessible)."""
     family, token = family_factory(test_db)
     drop_payload = "'; DROP TABLE families; --"

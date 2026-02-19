@@ -6,7 +6,9 @@ Tests verify cross-family access is denied with 404 responses.
 from fastapi.testclient import TestClient
 
 
-def test_cannot_get_user_from_different_family(test_client: TestClient, family_factory, user_factory, test_db):
+def test_cannot_get_user_from_different_family(
+    test_client: TestClient, family_factory, user_factory, test_db
+):
     """Test that accessing user from different family returns 404."""
     family1, token1 = family_factory(test_db, name="Family 1")
     family2, token2 = family_factory(test_db, name="Family 2")
@@ -20,7 +22,9 @@ def test_cannot_get_user_from_different_family(test_client: TestClient, family_f
     assert response.status_code == 404
 
 
-def test_cannot_access_user_ingredients_from_different_family(test_client: TestClient, family_factory, user_factory, test_db):
+def test_cannot_access_user_ingredients_from_different_family(
+    test_client: TestClient, family_factory, user_factory, test_db
+):
     """Test that accessing user ingredients from different family returns 404."""
     family1, token1 = family_factory(test_db, name="Family 1")
     family2, token2 = family_factory(test_db, name="Family 2")
@@ -34,7 +38,9 @@ def test_cannot_access_user_ingredients_from_different_family(test_client: TestC
     assert response.status_code == 404
 
 
-def test_cannot_update_user_ingredients_from_different_family(test_client: TestClient, family_factory, user_factory, test_db):
+def test_cannot_update_user_ingredients_from_different_family(
+    test_client: TestClient, family_factory, user_factory, test_db
+):
     """Test that updating user ingredients from different family returns 404."""
     family1, token1 = family_factory(test_db, name="Family 1")
     family2, token2 = family_factory(test_db, name="Family 2")
@@ -49,7 +55,9 @@ def test_cannot_update_user_ingredients_from_different_family(test_client: TestC
     assert response.status_code == 404
 
 
-def test_cannot_access_user_favorites_from_different_family(test_client: TestClient, family_factory, user_factory, test_db):
+def test_cannot_access_user_favorites_from_different_family(
+    test_client: TestClient, family_factory, user_factory, test_db
+):
     """Test that accessing user favorites from different family returns 404."""
     family1, token1 = family_factory(test_db, name="Family 1")
     family2, token2 = family_factory(test_db, name="Family 2")
@@ -63,7 +71,9 @@ def test_cannot_access_user_favorites_from_different_family(test_client: TestCli
     assert response.status_code == 404
 
 
-def test_cannot_add_favorite_from_different_family(test_client: TestClient, family_factory, user_factory, recipe_factory, test_db):
+def test_cannot_add_favorite_from_different_family(
+    test_client: TestClient, family_factory, user_factory, recipe_factory, test_db
+):
     """Test that adding favorite from different family returns 404."""
     family1, token1 = family_factory(test_db, name="Family 1")
     family2, token2 = family_factory(test_db, name="Family 2")
@@ -78,7 +88,9 @@ def test_cannot_add_favorite_from_different_family(test_client: TestClient, fami
     assert response.status_code == 404
 
 
-def test_cannot_remove_favorite_from_different_family(test_client: TestClient, family_factory, user_factory, recipe_factory, test_db):
+def test_cannot_remove_favorite_from_different_family(
+    test_client: TestClient, family_factory, user_factory, recipe_factory, test_db
+):
     """Test that removing favorite from different family returns 404."""
     family1, token1 = family_factory(test_db, name="Family 1")
     family2, token2 = family_factory(test_db, name="Family 2")
@@ -167,5 +179,3 @@ def test_cannot_verify_pin_for_other_family(test_client: TestClient, family_fact
     )
 
     assert response.status_code == 404
-
-

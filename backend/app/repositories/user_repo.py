@@ -25,6 +25,7 @@ class UserRepository(BaseRepository[User]):
     ) -> User:
         """Create new user in family."""
         import uuid
+
         user = User(
             id=uuid.uuid4(),
             family_id=family_id,
@@ -39,22 +40,36 @@ class UserRepository(BaseRepository[User]):
 
     def get_by_id_for_family(self, user_id: UUID, family_id: UUID) -> User | None:
         """Get user by ID, verifying family ownership."""
-        return self.db.query(User).filter(
-            User.id == user_id,
-            User.family_id == family_id,
-        ).first()
+        return (
+            self.db.query(User)
+            .filter(
+                User.id == user_id,
+                User.family_id == family_id,
+            )
+            .first()
+        )
 
     def list_by_family(self, family_id: UUID) -> list[User]:
         """Get all users in a family."""
-        return self.db.query(User).filter(
-            User.family_id == family_id,
-        ).order_by(User.name).all()
+        return (
+            self.db.query(User)
+            .filter(
+                User.family_id == family_id,
+            )
+            .order_by(User.name)
+            .all()
+        )
 
     def get_ingredients(self, user_id: UUID, family_id: UUID) -> list[str]:
         """Get list of ingredients for a user."""
-        ingredients = self.db.query(UserIngredient).filter(
-            UserIngredient.user_id == user_id,
-        ).order_by(UserIngredient.ingredient_name).all()
+        ingredients = (
+            self.db.query(UserIngredient)
+            .filter(
+                UserIngredient.user_id == user_id,
+            )
+            .order_by(UserIngredient.ingredient_name)
+            .all()
+        )
 
         # Verify family ownership
         user = self.db.query(User).filter(User.id == user_id).first()
@@ -66,10 +81,14 @@ class UserRepository(BaseRepository[User]):
     def replace_ingredients(self, user_id: UUID, family_id: UUID, ingredients: list[str]) -> bool:
         """Replace all ingredients for a user (idempotent PUT semantics)."""
         # Verify family ownership
-        user = self.db.query(User).filter(
-            User.id == user_id,
-            User.family_id == family_id,
-        ).first()
+        user = (
+            self.db.query(User)
+            .filter(
+                User.id == user_id,
+                User.family_id == family_id,
+            )
+            .first()
+        )
 
         if not user:
             return False
@@ -80,6 +99,7 @@ class UserRepository(BaseRepository[User]):
         # Add new ingredients
         for ingredient_name in ingredients:
             import uuid
+
             user_ing = UserIngredient(
                 id=uuid.uuid4(),
                 user_id=user_id,
@@ -95,42 +115,59 @@ class UserRepository(BaseRepository[User]):
     def get_favorites(self, user_id: UUID, family_id: UUID) -> list[UserFavorite]:
         """Get user's favorite recipes."""
         # Verify family ownership
-        user = self.db.query(User).filter(
-            User.id == user_id,
-            User.family_id == family_id,
-        ).first()
+        user = (
+            self.db.query(User)
+            .filter(
+                User.id == user_id,
+                User.family_id == family_id,
+            )
+            .first()
+        )
 
         if not user:
             return []
 
-        return self.db.query(UserFavorite).options(
-            selectinload(UserFavorite.recipe)
-        ).filter(
-            UserFavorite.user_id == user_id,
-        ).order_by(UserFavorite.added_at.desc()).all()
+        return (
+            self.db.query(UserFavorite)
+            .options(selectinload(UserFavorite.recipe))
+            .filter(
+                UserFavorite.user_id == user_id,
+            )
+            .order_by(UserFavorite.added_at.desc())
+            .all()
+        )
 
     def add_favorite(self, user_id: UUID, family_id: UUID, recipe_id: UUID) -> UserFavorite | None:
         """Add recipe to favorites (idempotent - returns existing if already exists)."""
         # Verify family ownership
-        user = self.db.query(User).filter(
-            User.id == user_id,
-            User.family_id == family_id,
-        ).first()
+        user = (
+            self.db.query(User)
+            .filter(
+                User.id == user_id,
+                User.family_id == family_id,
+            )
+            .first()
+        )
 
         if not user:
             return None
 
         # Check if already exists
-        existing = self.db.query(UserFavorite).filter(
-            UserFavorite.user_id == user_id,
-            UserFavorite.recipe_id == recipe_id,
-        ).first()
+        existing = (
+            self.db.query(UserFavorite)
+            .filter(
+                UserFavorite.user_id == user_id,
+                UserFavorite.recipe_id == recipe_id,
+            )
+            .first()
+        )
 
         if existing:
             return existing
 
         # Create new favorite
         import uuid
+
         favorite = UserFavorite(
             id=uuid.uuid4(),
             user_id=user_id,
@@ -144,10 +181,14 @@ class UserRepository(BaseRepository[User]):
     def remove_favorite(self, user_id: UUID, family_id: UUID, recipe_id: UUID) -> bool:
         """Remove recipe from favorites (idempotent - success even if not exists)."""
         # Verify family ownership
-        user = self.db.query(User).filter(
-            User.id == user_id,
-            User.family_id == family_id,
-        ).first()
+        user = (
+            self.db.query(User)
+            .filter(
+                User.id == user_id,
+                User.family_id == family_id,
+            )
+            .first()
+        )
 
         if not user:
             return False
@@ -163,9 +204,13 @@ class UserRepository(BaseRepository[User]):
 
     def is_favorite(self, user_id: UUID, recipe_id: UUID) -> bool:
         """Check if recipe is in user's favorites."""
-        favorite = self.db.query(UserFavorite).filter(
-            UserFavorite.user_id == user_id,
-            UserFavorite.recipe_id == recipe_id,
-        ).first()
+        favorite = (
+            self.db.query(UserFavorite)
+            .filter(
+                UserFavorite.user_id == user_id,
+                UserFavorite.recipe_id == recipe_id,
+            )
+            .first()
+        )
 
         return favorite is not None

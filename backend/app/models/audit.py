@@ -19,9 +19,7 @@ class AuditLog(DeclarativeBase):
     """
 
     __tablename__ = "audit_log"
-    __table_args__ = (
-        Index("ix_audit_log_family_id", "family_id"),
-    )
+    __table_args__ = (Index("ix_audit_log_family_id", "family_id"),)
 
     # UUID primary key
     id = Column(GUID, primary_key=True, default=uuid.uuid4, nullable=False)
@@ -31,7 +29,9 @@ class AuditLog(DeclarativeBase):
     user_id = Column(GUID, nullable=True)
 
     # Action details
-    action = Column(String(100), nullable=False)  # e.g., "token.rotated", "pin.failed", "family.deleted"
+    action = Column(
+        String(100), nullable=False
+    )  # e.g., "token.rotated", "pin.failed", "family.deleted"
     entity_type = Column(String(50), nullable=False)  # e.g., "recipe", "user", "family"
     entity_id = Column(GUID, nullable=False)
 
@@ -49,4 +49,6 @@ class AuditLog(DeclarativeBase):
     family = relationship("Family", back_populates="audit_logs")
 
     def __repr__(self):
-        return f"<AuditLog {self.action} on {self.entity_type}({self.entity_id}) at {self.timestamp}>"
+        return (
+            f"<AuditLog {self.action} on {self.entity_type}({self.entity_id}) at {self.timestamp}>"
+        )

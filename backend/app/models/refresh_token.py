@@ -21,7 +21,9 @@ class RefreshToken(DeclarativeBase):
     __tablename__ = "refresh_tokens"
 
     id = Column(GUID, primary_key=True, default=uuid.uuid4, nullable=False)
-    family_id = Column(GUID, ForeignKey("families.id", ondelete="CASCADE"), nullable=False, index=True)
+    family_id = Column(
+        GUID, ForeignKey("families.id", ondelete="CASCADE"), nullable=False, index=True
+    )
     token_hash = Column(String(64), unique=True, nullable=False, index=True)
     expires_at = Column(DateTime, nullable=False)
     revoked = Column(Boolean, default=False, nullable=False)

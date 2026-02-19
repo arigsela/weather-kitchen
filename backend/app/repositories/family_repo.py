@@ -97,11 +97,16 @@ class FamilyRepository(BaseRepository[Family]):
     def _generate_uuid(self):
         """Generate a new UUID."""
         import uuid
+
         return uuid.uuid4()
 
     def get_soft_deleted_before(self, cutoff_date: datetime) -> list[Family]:
         """Get families soft-deleted before cutoff date."""
-        return self.db.query(Family).filter(
-            Family.is_active == False,  # noqa: E712
-            Family.updated_at <= cutoff_date,
-        ).all()
+        return (
+            self.db.query(Family)
+            .filter(
+                Family.is_active == False,  # noqa: E712
+                Family.updated_at <= cutoff_date,
+            )
+            .all()
+        )

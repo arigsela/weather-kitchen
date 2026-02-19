@@ -106,7 +106,9 @@ def test_token_with_single_quotes_returns_401(test_client: TestClient, family_fa
     assert response.status_code == 401
 
 
-def test_rotation_new_refresh_token_cannot_reuse_old(test_client: TestClient, family_factory, test_db):
+def test_rotation_new_refresh_token_cannot_reuse_old(
+    test_client: TestClient, family_factory, test_db
+):
     """After JWT rotation, the old refresh token is revoked and cannot generate a new access token."""
     family, old_token = family_factory(test_db, admin_pin="1234")
 

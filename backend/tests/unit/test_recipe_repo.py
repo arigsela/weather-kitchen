@@ -18,6 +18,7 @@ class TestRecipeRepository:
         )
 
         from app.repositories.recipe_repo import RecipeRepository
+
         repo = RecipeRepository(test_db)
         found = repo.get_by_id(recipe.id)
 
@@ -31,6 +32,7 @@ class TestRecipeRepository:
         import uuid
 
         from app.repositories.recipe_repo import RecipeRepository
+
         repo = RecipeRepository(test_db)
         found = repo.get_by_id(uuid.uuid4())
 
@@ -41,6 +43,7 @@ class TestRecipeRepository:
         RecipeFactory.create_batch(test_db, count=5)
 
         from app.repositories.recipe_repo import RecipeRepository
+
         repo = RecipeRepository(test_db)
         recipes, total = repo.list_recipes()
 
@@ -52,6 +55,7 @@ class TestRecipeRepository:
         RecipeFactory.create_batch(test_db, count=10)
 
         from app.repositories.recipe_repo import RecipeRepository
+
         repo = RecipeRepository(test_db)
         page1, total1 = repo.list_recipes(limit=5, offset=0)
         page2, total2 = repo.list_recipes(limit=5, offset=5)
@@ -68,6 +72,7 @@ class TestRecipeRepository:
         RecipeFactory.create(test_db, weather="sunny", name="Another Sunny")
 
         from app.repositories.recipe_repo import RecipeRepository
+
         repo = RecipeRepository(test_db)
         recipes, total = repo.list_recipes(weather="sunny")
 
@@ -82,6 +87,7 @@ class TestRecipeRepository:
         RecipeFactory.create(test_db, category="breakfast")
 
         from app.repositories.recipe_repo import RecipeRepository
+
         repo = RecipeRepository(test_db)
         recipes, total = repo.list_recipes(category="breakfast")
 
@@ -100,6 +106,7 @@ class TestRecipeRepository:
         RecipeTagFactory.create(test_db, r3.id, "vegetarian")
 
         from app.repositories.recipe_repo import RecipeRepository
+
         repo = RecipeRepository(test_db)
         recipes, total = repo.list_recipes(tags=["vegetarian"])
 
@@ -112,6 +119,7 @@ class TestRecipeRepository:
         RecipeFactory.create_batch(test_db, count=2, weather="rainy")
 
         from app.repositories.recipe_repo import RecipeRepository
+
         repo = RecipeRepository(test_db)
         stats = repo.get_weather_stats()
 
@@ -127,6 +135,7 @@ class TestRecipeRepository:
         RecipeTagFactory.create(test_db, r2.id, "healthy")
 
         from app.repositories.recipe_repo import RecipeRepository
+
         repo = RecipeRepository(test_db)
         categories = repo.get_tag_categories()
 
@@ -142,6 +151,7 @@ class TestRecipeRepository:
         RecipeFactory.create(test_db, name="Rice Bowl")
 
         from app.repositories.recipe_repo import RecipeRepository
+
         repo = RecipeRepository(test_db)
         results = repo.search_by_name("Pasta")
 
@@ -152,6 +162,7 @@ class TestRecipeRepository:
         RecipeFactory.create(test_db, name="Sunny Pasta")
 
         from app.repositories.recipe_repo import RecipeRepository
+
         repo = RecipeRepository(test_db)
         results = repo.search_by_name("SUNNY")
 
@@ -167,6 +178,7 @@ class TestRecipeRepository:
         )
 
         from app.repositories.recipe_repo import RecipeRepository
+
         repo = RecipeRepository(test_db)
         found = repo.get_by_id(recipe.id)
 

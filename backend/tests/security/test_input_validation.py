@@ -11,6 +11,7 @@ from fastapi.testclient import TestClient
 # Family creation validation tests
 # ---------------------------------------------------------------------------
 
+
 def test_empty_family_name_rejected_with_422(test_client: TestClient):
     """Test that an empty family name is rejected during family creation."""
     response = test_client.post(
@@ -121,6 +122,7 @@ def test_family_size_at_maximum_accepted(test_client: TestClient):
 # Admin PIN validation tests
 # ---------------------------------------------------------------------------
 
+
 def test_admin_pin_with_letters_rejected_with_422(test_client: TestClient):
     """Test that a PIN containing alphabetical characters is rejected."""
     response = test_client.post(
@@ -216,6 +218,7 @@ def test_admin_pin_with_special_characters_rejected_with_422(test_client: TestCl
 # User creation validation tests
 # ---------------------------------------------------------------------------
 
+
 def test_empty_user_name_rejected_with_422(test_client: TestClient, family_factory, test_db):
     """Test that an empty user name is rejected during user creation."""
     family, token = family_factory(test_db)
@@ -228,7 +231,9 @@ def test_empty_user_name_rejected_with_422(test_client: TestClient, family_facto
     assert response.status_code == 422
 
 
-def test_user_name_exceeding_max_length_rejected_with_422(test_client: TestClient, family_factory, test_db):
+def test_user_name_exceeding_max_length_rejected_with_422(
+    test_client: TestClient, family_factory, test_db
+):
     """Test that a user name exceeding 100 characters is rejected."""
     family, token = family_factory(test_db)
     long_name = "U" * 101
@@ -258,6 +263,7 @@ def test_user_name_at_max_length_accepted(test_client: TestClient, family_factor
 # Null byte and edge-case string tests
 # ---------------------------------------------------------------------------
 
+
 def test_null_byte_in_family_name_rejected_or_sanitized(test_client: TestClient):
     """Test that null bytes in family name are rejected (422) or sanitized by the system."""
     response = test_client.post(
@@ -274,7 +280,9 @@ def test_null_byte_in_family_name_rejected_or_sanitized(test_client: TestClient)
         assert "\x00" not in stored_name
 
 
-def test_null_byte_in_user_name_rejected_or_sanitized(test_client: TestClient, family_factory, test_db):
+def test_null_byte_in_user_name_rejected_or_sanitized(
+    test_client: TestClient, family_factory, test_db
+):
     """Test that null bytes in user name are rejected (422) or sanitized by the system."""
     family, token = family_factory(test_db)
 

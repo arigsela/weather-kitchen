@@ -23,15 +23,15 @@ class ErrorResponse(BaseModel):
     message: str = Field(..., description="Human-readable error message")
     details: list[ErrorDetail] | None = Field(None, description="Field-level error details")
 
-    model_config = ConfigDict(examples=[
-        {
-            "code": "VALIDATION_ERROR",
-            "message": "Validation failed",
-            "details": [
-                {"field": "family_size", "message": "Must be between 1 and 20"}
-            ],
-        }
-    ])
+    model_config = ConfigDict(
+        examples=[
+            {
+                "code": "VALIDATION_ERROR",
+                "message": "Validation failed",
+                "details": [{"field": "family_size", "message": "Must be between 1 and 20"}],
+            }
+        ]
+    )
 
 
 class PaginationParams(BaseModel):
@@ -40,10 +40,12 @@ class PaginationParams(BaseModel):
     limit: int = Field(20, ge=1, le=100, description="Items per page")
     offset: int = Field(0, ge=0, description="Number of items to skip")
 
-    model_config = ConfigDict(examples=[
-        {"limit": 20, "offset": 0},
-        {"limit": 50, "offset": 100},
-    ])
+    model_config = ConfigDict(
+        examples=[
+            {"limit": 20, "offset": 0},
+            {"limit": 50, "offset": 100},
+        ]
+    )
 
 
 class PaginatedResponse(BaseModel, Generic[T]):

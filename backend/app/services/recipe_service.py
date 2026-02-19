@@ -67,10 +67,7 @@ class RecipeService:
             offset=offset,
         )
 
-        items = [
-            RecipeListItem.model_validate(recipe)
-            for recipe in recipes
-        ]
+        items = [RecipeListItem.model_validate(recipe) for recipe in recipes]
 
         return {
             "total": total,
@@ -103,8 +100,7 @@ class RecipeService:
         stats = self.repository.get_weather_stats()
         return {
             "stats": [
-                {"weather": weather, "count": count}
-                for weather, count in sorted(stats.items())
+                {"weather": weather, "count": count} for weather, count in sorted(stats.items())
             ]
         }
 
@@ -120,10 +116,7 @@ class RecipeService:
         # Convert to response format
         categories = {}
         for category, tags_with_counts in tag_categories.items():
-            categories[category] = [
-                {"tag": tag, "count": count}
-                for tag, count in tags_with_counts
-            ]
+            categories[category] = [{"tag": tag, "count": count} for tag, count in tags_with_counts]
 
         return {"categories": categories}
 

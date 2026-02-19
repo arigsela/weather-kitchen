@@ -64,7 +64,9 @@ def test_get_user_requires_auth(test_client: TestClient, family_factory, user_fa
     assert response.status_code == 401
 
 
-def test_get_ingredients_requires_auth(test_client: TestClient, family_factory, user_factory, test_db):
+def test_get_ingredients_requires_auth(
+    test_client: TestClient, family_factory, user_factory, test_db
+):
     """Test that getting ingredients requires authentication."""
     family, token = family_factory(test_db)
     user = user_factory(test_db, family_id=family.id)
@@ -73,7 +75,9 @@ def test_get_ingredients_requires_auth(test_client: TestClient, family_factory, 
     assert response.status_code == 401
 
 
-def test_update_ingredients_requires_auth(test_client: TestClient, family_factory, user_factory, test_db):
+def test_update_ingredients_requires_auth(
+    test_client: TestClient, family_factory, user_factory, test_db
+):
     """Test that updating ingredients requires authentication."""
     family, token = family_factory(test_db)
     user = user_factory(test_db, family_id=family.id)
@@ -85,7 +89,9 @@ def test_update_ingredients_requires_auth(test_client: TestClient, family_factor
     assert response.status_code == 401
 
 
-def test_get_favorites_requires_auth(test_client: TestClient, family_factory, user_factory, test_db):
+def test_get_favorites_requires_auth(
+    test_client: TestClient, family_factory, user_factory, test_db
+):
     """Test that getting favorites requires authentication."""
     family, token = family_factory(test_db)
     user = user_factory(test_db, family_id=family.id)
@@ -94,27 +100,27 @@ def test_get_favorites_requires_auth(test_client: TestClient, family_factory, us
     assert response.status_code == 401
 
 
-def test_add_favorite_requires_auth(test_client: TestClient, family_factory, user_factory, recipe_factory, test_db):
+def test_add_favorite_requires_auth(
+    test_client: TestClient, family_factory, user_factory, recipe_factory, test_db
+):
     """Test that adding favorite requires authentication."""
     family, token = family_factory(test_db)
     user = user_factory(test_db, family_id=family.id)
     recipe = recipe_factory(test_db)
 
-    response = test_client.put(
-        f"/api/v1/users/{user.id}/favorites/{recipe.id}"
-    )
+    response = test_client.put(f"/api/v1/users/{user.id}/favorites/{recipe.id}")
     assert response.status_code == 401
 
 
-def test_remove_favorite_requires_auth(test_client: TestClient, family_factory, user_factory, recipe_factory, test_db):
+def test_remove_favorite_requires_auth(
+    test_client: TestClient, family_factory, user_factory, recipe_factory, test_db
+):
     """Test that removing favorite requires authentication."""
     family, token = family_factory(test_db)
     user = user_factory(test_db, family_id=family.id)
     recipe = recipe_factory(test_db)
 
-    response = test_client.delete(
-        f"/api/v1/users/{user.id}/favorites/{recipe.id}"
-    )
+    response = test_client.delete(f"/api/v1/users/{user.id}/favorites/{recipe.id}")
     assert response.status_code == 401
 
 
@@ -176,8 +182,6 @@ def test_export_family_requires_auth(test_client: TestClient, family_factory, te
 
     response = test_client.get(f"/api/v1/families/{family.id}/export")
     assert response.status_code == 401
-
-
 
 
 def test_rotated_new_token_works(test_client: TestClient, family_factory, test_db):

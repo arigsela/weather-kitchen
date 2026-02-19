@@ -43,9 +43,7 @@ class ErrorHandlerMiddleware(BaseHTTPMiddleware):
                     "error": {
                         "code": "INTERNAL_SERVER_ERROR",
                         "message": "Internal server error. Please contact support.",
-                        "details": [
-                            {"field": "error_id", "message": f"Reference: {error_id}"}
-                        ],
+                        "details": [{"field": "error_id", "message": f"Reference: {error_id}"}],
                     }
                 },
             )

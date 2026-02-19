@@ -36,7 +36,9 @@ class Family(DeclarativeBase):
     # Relationships
     users = relationship("User", back_populates="family", cascade="all, delete-orphan")
     audit_logs = relationship("AuditLog", back_populates="family", cascade="all, delete-orphan")
-    refresh_tokens = relationship("RefreshToken", back_populates="family", cascade="all, delete-orphan")
+    refresh_tokens = relationship(
+        "RefreshToken", back_populates="family", cascade="all, delete-orphan"
+    )
 
     # Timestamps
     created_at = Column(TimestampMixin.created_at.type, nullable=False)
