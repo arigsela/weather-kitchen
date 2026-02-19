@@ -8,7 +8,6 @@ without being executed or altered in a way that could enable script injection.
 import pytest
 from fastapi.testclient import TestClient
 
-
 # ---------------------------------------------------------------------------
 # XSS payload catalogue
 # ---------------------------------------------------------------------------

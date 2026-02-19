@@ -2,8 +2,9 @@
 User request and response schemas.
 """
 
-from uuid import UUID
 from datetime import datetime
+from uuid import UUID
+
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 

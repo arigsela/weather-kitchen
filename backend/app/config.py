@@ -4,7 +4,7 @@ Loads configuration from environment variables.
 """
 
 import logging
-import secrets
+
 from pydantic_settings import BaseSettings
 
 logger = logging.getLogger(__name__)

@@ -8,7 +8,6 @@ and that no database errors (500) are produced in any case.
 import pytest
 from fastapi.testclient import TestClient
 
-
 # ---------------------------------------------------------------------------
 # SQL injection payload catalogue
 # ---------------------------------------------------------------------------

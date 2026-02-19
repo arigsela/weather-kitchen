@@ -6,7 +6,7 @@ Refresh tokens: 7-day TTL, contain family_id + jti (unique ID for revocation).
 
 import hashlib
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 import jwt
 
@@ -14,7 +14,7 @@ from app.config import settings
 
 
 def _now() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 def create_access_token(family_id: str) -> str:

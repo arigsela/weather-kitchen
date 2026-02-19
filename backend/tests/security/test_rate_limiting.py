@@ -10,7 +10,6 @@ Rapid sequential requests within a single test are used to exhaust the limits.
 
 from fastapi.testclient import TestClient
 
-
 # ---------------------------------------------------------------------------
 # General rate limiting (10 req/sec per IP)
 # ---------------------------------------------------------------------------

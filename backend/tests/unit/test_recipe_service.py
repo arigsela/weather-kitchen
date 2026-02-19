@@ -2,8 +2,7 @@
 Unit tests for RecipeService.
 """
 
-import pytest
-from tests.factories import RecipeFactory, RecipeWithDetailsFactory, RecipeTagFactory
+from tests.factories import RecipeFactory, RecipeTagFactory, RecipeWithDetailsFactory
 
 
 class TestRecipeService:

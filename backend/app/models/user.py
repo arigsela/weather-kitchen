@@ -3,11 +3,12 @@ User models: User, UserIngredient, UserFavorite.
 """
 
 import uuid
-from sqlalchemy import Column, String, Boolean, Integer, ForeignKey, DateTime, Index
+
+from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Index, String
 from sqlalchemy.orm import relationship
 
-from app.models.base import DeclarativeBase, UUIDMixin, TimestampMixin
 from app.database import GUID
+from app.models.base import DeclarativeBase, TimestampMixin
 
 
 class User(DeclarativeBase):

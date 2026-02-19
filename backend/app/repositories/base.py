@@ -2,10 +2,11 @@
 Base repository with common CRUD operations.
 """
 
-from typing import TypeVar, Generic, List, Optional
+from typing import Generic, TypeVar
 from uuid import UUID
+
+from sqlalchemy import func
 from sqlalchemy.orm import Session
-from sqlalchemy import select, func
 
 T = TypeVar("T")
 
@@ -17,13 +18,13 @@ class BaseRepository(Generic[T]):
         self.db = db
         self.model_class = model_class
 
-    def get_by_id(self, id: UUID) -> Optional[T]:
+    def get_by_id(self, id: UUID) -> T | None:
         """Get entity by ID."""
         return self.db.query(self.model_class).filter(
             self.model_class.id == id
         ).first()
 
-    def get_all(self, limit: int = 100, offset: int = 0) -> List[T]:
+    def get_all(self, limit: int = 100, offset: int = 0) -> list[T]:
         """Get all entities with pagination."""
         return self.db.query(self.model_class).limit(limit).offset(offset).all()
 
@@ -38,7 +39,7 @@ class BaseRepository(Generic[T]):
         self.db.flush()
         return entity
 
-    def update(self, id: UUID, **kwargs) -> Optional[T]:
+    def update(self, id: UUID, **kwargs) -> T | None:
         """Update entity by ID."""
         entity = self.get_by_id(id)
         if not entity:

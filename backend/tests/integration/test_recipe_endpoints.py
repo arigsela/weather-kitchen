@@ -2,8 +2,7 @@
 Integration tests for recipe endpoints.
 """
 
-import pytest
-from tests.factories import RecipeFactory, RecipeWithDetailsFactory, RecipeTagFactory
+from tests.factories import RecipeFactory, RecipeTagFactory, RecipeWithDetailsFactory
 
 
 class TestRecipeEndpoints:

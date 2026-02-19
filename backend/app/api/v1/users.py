@@ -4,19 +4,25 @@ User management endpoints - CRUD, ingredients, favorites.
 
 import json
 from uuid import UUID
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request, status, Query
+
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
 
-from app.database import get_db
-from app.models.family import Family
-from app.services.user_service import UserService
-from app.services.audit_service import _audit_log_background
-from app.schemas.user import (
-    UserCreate, UserResponse, UserListResponse, IngredientUpdate, IngredientResponse,
-    FavoriteAdd, FavoritesListResponse, FavoriteResponse
-)
 from app.auth.dependencies import get_current_family
+from app.database import get_db
 from app.middleware.request_id import get_request_id
+from app.models.family import Family
+from app.schemas.user import (
+    FavoriteResponse,
+    FavoritesListResponse,
+    IngredientResponse,
+    IngredientUpdate,
+    UserCreate,
+    UserListResponse,
+    UserResponse,
+)
+from app.services.audit_service import _audit_log_background
+from app.services.user_service import UserService
 
 router = APIRouter(prefix="/api/v1", tags=["users"])
 

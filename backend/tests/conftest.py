@@ -2,21 +2,21 @@
 Test fixtures and configuration for pytest.
 """
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from uuid import uuid4
-import pytest
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, Session
-from sqlalchemy.pool import StaticPool
-from fastapi.testclient import TestClient
 
+import pytest
+from fastapi.testclient import TestClient
+from sqlalchemy import create_engine
+from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.pool import StaticPool
+
+from app.database import get_db
 from app.main import create_app
 from app.models.base import DeclarativeBase
 from app.models.family import Family
-from app.models.user import User
 from app.models.recipe import Recipe
-from app.database import get_db
-from app.auth.pin import hash_pin
+from app.models.user import User
 
 
 @pytest.fixture(scope="function")
@@ -104,8 +104,8 @@ def user_factory():
             family_id=family_id,
             name=name,
             emoji=emoji,
-            created_at=datetime.now(timezone.utc),
-            updated_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
+            updated_at=datetime.now(UTC),
         )
         db.add(user)
         db.commit()
@@ -134,8 +134,8 @@ def recipe_factory():
             weather=weather,
             category=category,
             version_added="1.0.0",
-            created_at=datetime.now(timezone.utc),
-            updated_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
+            updated_at=datetime.now(UTC),
         )
         db.add(recipe)
         db.commit()

@@ -2,8 +2,7 @@
 Unit tests for RecipeRepository.
 """
 
-import pytest
-from tests.factories import RecipeFactory, RecipeWithDetailsFactory, RecipeIngredientFactory, RecipeTagFactory
+from tests.factories import RecipeFactory, RecipeTagFactory, RecipeWithDetailsFactory
 
 
 class TestRecipeRepository:
@@ -30,6 +29,7 @@ class TestRecipeRepository:
     def test_get_by_id_not_found(self, test_db):
         """Test getting non-existent recipe."""
         import uuid
+
         from app.repositories.recipe_repo import RecipeRepository
         repo = RecipeRepository(test_db)
         found = repo.get_by_id(uuid.uuid4())

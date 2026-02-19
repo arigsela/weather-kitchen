@@ -5,22 +5,22 @@ FastAPI application factory with middleware registration and lifespan events.
 import logging
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, Depends
+from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
-from app.config import settings, _DEV_JWT_SECRET
-from app.database import get_db, engine
-from app.models import DeclarativeBase
+from app.api.v1.router import router as v1_router
+from app.config import _DEV_JWT_SECRET, settings
+from app.database import engine, get_db
 from app.middleware import (
-    SecurityHeadersMiddleware,
     ErrorHandlerMiddleware,
+    RateLimiterMiddleware,
     RequestIDMiddleware,
     RequestLoggingMiddleware,
-    RateLimiterMiddleware,
+    SecurityHeadersMiddleware,
 )
-from app.api.v1.router import router as v1_router
+from app.models import DeclarativeBase
 
 # Configure logging
 logging.basicConfig(

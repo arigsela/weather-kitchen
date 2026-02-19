@@ -3,12 +3,12 @@ Family model - family account with JWT authentication and PIN for sensitive oper
 """
 
 import uuid
-from datetime import datetime, timezone
-from sqlalchemy import Column, String, Integer, Boolean, DateTime, ForeignKey
+
+from sqlalchemy import Boolean, Column, DateTime, Integer, String
 from sqlalchemy.orm import relationship
 
-from app.models.base import DeclarativeBase, UUIDMixin, TimestampMixin
 from app.database import GUID
+from app.models.base import DeclarativeBase, TimestampMixin
 
 
 class Family(DeclarativeBase):

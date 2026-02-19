@@ -3,12 +3,9 @@ Security tests for JWT authentication.
 Tests verify access/refresh token lifecycle, expiry, tampering, and revocation.
 """
 
-import time
-import pytest
 from fastapi.testclient import TestClient
 
 from app.auth.jwt import create_access_token, create_refresh_token, decode_token
-
 
 # ---------------------------------------------------------------------------
 # Access token tests
@@ -40,7 +37,8 @@ def test_access_token_with_wrong_signature_rejected(test_client: TestClient, fam
 def test_access_token_with_tampered_payload_rejected(test_client: TestClient, family_factory, test_db):
     """Modifying the payload invalidates the HMAC signature → rejected."""
     family, access_token = family_factory(test_db)
-    import base64, json
+    import base64
+    import json
     parts = access_token.split(".")
     # Decode payload (add padding)
     payload_json = base64.urlsafe_b64decode(parts[1] + "==").decode()

@@ -2,16 +2,15 @@
 Family service - business logic for family operations.
 """
 
-from datetime import datetime, timedelta, timezone
-from typing import Optional
+from datetime import UTC, datetime, timedelta
 from uuid import UUID
 
 from sqlalchemy.orm import Session
 
 from app.auth.jwt import create_access_token, create_refresh_token
-from app.auth.pin import hash_pin, verify_pin as verify_pin_hash
+from app.auth.pin import hash_pin
+from app.auth.pin import verify_pin as verify_pin_hash
 from app.config import settings
-from app.models.family import Family
 from app.repositories.family_repo import FamilyRepository
 from app.repositories.refresh_token_repo import RefreshTokenRepository
 from app.schemas.family import FamilyResponse
@@ -51,7 +50,7 @@ class FamilyService:
         refresh_token, _ = create_refresh_token(str(family.id))
 
         # Persist refresh token
-        expires_at = datetime.now(timezone.utc) + timedelta(days=settings.jwt_refresh_token_expire_days)
+        expires_at = datetime.now(UTC) + timedelta(days=settings.jwt_refresh_token_expire_days)
         self.refresh_repo.create(family.id, refresh_token, expires_at)
 
         self.db.commit()
@@ -59,7 +58,7 @@ class FamilyService:
         response = FamilyResponse.model_validate(family)
         return response, access_token, refresh_token
 
-    def get_family(self, family_id: UUID) -> Optional[FamilyResponse]:
+    def get_family(self, family_id: UUID) -> FamilyResponse | None:
         """Get family by ID."""
         family = self.repository.get_by_id(family_id)
         if not family:
@@ -69,9 +68,9 @@ class FamilyService:
     def update_family(
         self,
         family_id: UUID,
-        name: Optional[str] = None,
-        family_size: Optional[int] = None,
-    ) -> Optional[FamilyResponse]:
+        name: str | None = None,
+        family_size: int | None = None,
+    ) -> FamilyResponse | None:
         """Update family settings."""
         family = self.repository.get_by_id(family_id)
         if not family:
@@ -82,7 +81,7 @@ class FamilyService:
         if family_size is not None:
             family.family_size = family_size
 
-        family.updated_at = datetime.now(timezone.utc)
+        family.updated_at = datetime.now(UTC)
         self.db.add(family)
         self.db.commit()
 
@@ -117,13 +116,13 @@ class FamilyService:
         access_token = create_access_token(str(family_id))
         refresh_token, _ = create_refresh_token(str(family_id))
 
-        expires_at = datetime.now(timezone.utc) + timedelta(days=settings.jwt_refresh_token_expire_days)
+        expires_at = datetime.now(UTC) + timedelta(days=settings.jwt_refresh_token_expire_days)
         self.refresh_repo.create(family_id, refresh_token, expires_at)
 
         self.db.commit()
         return access_token, refresh_token
 
-    def refresh_access_token(self, refresh_token: str) -> Optional[tuple[str, str]]:
+    def refresh_access_token(self, refresh_token: str) -> tuple[str, str] | None:
         """
         Validate a refresh token and issue a new access + refresh pair (rotation).
 
@@ -131,6 +130,7 @@ class FamilyService:
             Tuple of (new_access_token, new_refresh_token) or None if invalid
         """
         import jwt as pyjwt
+
         from app.auth.jwt import decode_token
 
         # Decode JWT claims first
@@ -151,10 +151,10 @@ class FamilyService:
         if not record or record.revoked:
             return None
 
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         expires_at = record.expires_at
         if expires_at.tzinfo is None:
-            expires_at = expires_at.replace(tzinfo=timezone.utc)
+            expires_at = expires_at.replace(tzinfo=UTC)
         if expires_at < now:
             return None
 
@@ -179,7 +179,7 @@ class FamilyService:
             self.db.commit()
         return revoked
 
-    def verify_pin(self, family_id: UUID, admin_pin: str) -> tuple[bool, Optional[str]]:
+    def verify_pin(self, family_id: UUID, admin_pin: str) -> tuple[bool, str | None]:
         """
         Verify PIN and handle lockout/attempt tracking.
 
@@ -193,8 +193,8 @@ class FamilyService:
         if family.pin_locked_until:
             locked_until = family.pin_locked_until
             if locked_until.tzinfo is None:
-                locked_until = locked_until.replace(tzinfo=timezone.utc)
-            if locked_until > datetime.now(timezone.utc):
+                locked_until = locked_until.replace(tzinfo=UTC)
+            if locked_until > datetime.now(UTC):
                 return False, f"Locked until {locked_until.isoformat()}"
 
         pin_correct = verify_pin_hash(admin_pin, family.admin_pin_hash)
@@ -209,7 +209,7 @@ class FamilyService:
         self.db.commit()
         return True, None
 
-    def export_family_data(self, family_id: UUID) -> Optional[dict]:
+    def export_family_data(self, family_id: UUID) -> dict | None:
         """Export all family data for GDPR compliance."""
         family = self.repository.get_by_id(family_id, include_inactive=True)
         if not family:
@@ -222,5 +222,5 @@ class FamilyService:
             "family": FamilyResponse.model_validate(family).model_dump(),
             "users": users,
             "audit_log": audit_log,
-            "export_date": datetime.now(timezone.utc).isoformat(),
+            "export_date": datetime.now(UTC).isoformat(),
         }

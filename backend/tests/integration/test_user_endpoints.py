@@ -3,7 +3,6 @@ Integration tests for user management endpoints.
 """
 
 from fastapi.testclient import TestClient
-import pytest
 
 
 def test_create_user_requires_auth(test_client: TestClient):
@@ -39,8 +38,8 @@ def test_create_user_with_valid_token(test_client: TestClient, family_factory, t
 def test_list_users_in_family(test_client: TestClient, family_factory, user_factory, test_db):
     """Test GET /users lists users in authenticated family."""
     family, token = family_factory(test_db)
-    user1 = user_factory(test_db, family_id=family.id, name="Alice")
-    user2 = user_factory(test_db, family_id=family.id, name="Bob")
+    user1 = user_factory(test_db, family_id=family.id, name="Alice")  # noqa: F841
+    user2 = user_factory(test_db, family_id=family.id, name="Bob")  # noqa: F841
 
     response = test_client.get(
         "/api/v1/users",
@@ -122,7 +121,7 @@ def test_update_ingredients_is_idempotent(test_client: TestClient, family_factor
     user = user_factory(test_db, family_id=family.id)
 
     # First update
-    response1 = test_client.put(
+    response1 = test_client.put(  # noqa: F841
         f"/api/v1/users/{user.id}/ingredients",
         json={"ingredients": ["apple", "banana"]},
         headers={"Authorization": f"Bearer {token}"},

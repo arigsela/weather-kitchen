@@ -4,23 +4,31 @@ Family management endpoints - create, read, update, delete families and manage a
 
 import json
 from uuid import UUID
+
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
 
-from app.database import get_db
-from app.models.family import Family
-from app.services.family_service import FamilyService
-from app.services.audit_service import _audit_log_background
-from app.schemas.family import (
-    FamilyCreate, FamilyCreateResponse, FamilyResponse, FamilyUpdate, FamilyExportResponse
-)
-from app.schemas.auth import (
-    TokenRotateRequest, TokenRotateResponse, PinVerifyRequest, PinVerifyResponse,
-    SuccessResponse,
-)
+from app.auth.dependencies import require_family_owner
 from app.config import settings
-from app.auth.dependencies import get_current_family, require_family_owner, require_pin
+from app.database import get_db
 from app.middleware.request_id import get_request_id
+from app.models.family import Family
+from app.schemas.auth import (
+    PinVerifyRequest,
+    PinVerifyResponse,
+    SuccessResponse,
+    TokenRotateRequest,
+    TokenRotateResponse,
+)
+from app.schemas.family import (
+    FamilyCreate,
+    FamilyCreateResponse,
+    FamilyExportResponse,
+    FamilyResponse,
+    FamilyUpdate,
+)
+from app.services.audit_service import _audit_log_background
+from app.services.family_service import FamilyService
 
 router = APIRouter(prefix="/api/v1", tags=["families"])
 
@@ -64,7 +72,7 @@ async def create_family(
         family_size=family_response.family_size,
         access_token=access_token,
         refresh_token=refresh_token,
-        token_type="bearer",
+        token_type="bearer",  # noqa: S106
         expires_in=settings.jwt_access_token_expire_minutes * 60,
     )
 
@@ -262,7 +270,7 @@ async def rotate_token(
         family_id=family_id,
         access_token=access_token,
         refresh_token=refresh_token,
-        token_type="bearer",
+        token_type="bearer",  # noqa: S106
         expires_in=settings.jwt_access_token_expire_minutes * 60,
     )
 

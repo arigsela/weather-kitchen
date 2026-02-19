@@ -6,9 +6,9 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.services.recipe_service import RecipeService
-from app.schemas.stats import WeatherStatsResponse, TagCategoriesResponse
 from app.middleware.request_id import get_request_id
+from app.schemas.stats import TagCategoriesResponse, WeatherStatsResponse
+from app.services.recipe_service import RecipeService
 
 router = APIRouter(prefix="/api/v1", tags=["stats"])
 

@@ -2,8 +2,7 @@
 Common schema definitions used across the API.
 """
 
-from typing import Any, Generic, TypeVar
-from uuid import UUID
+from typing import Generic, TypeVar
 
 from pydantic import BaseModel, ConfigDict, Field
 

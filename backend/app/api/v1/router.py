@@ -4,7 +4,7 @@ V1 API router - aggregates all v1 endpoints.
 
 from fastapi import APIRouter
 
-from app.api.v1 import recipes, stats, families, users, auth
+from app.api.v1 import auth, families, recipes, stats, users
 
 router = APIRouter()
 

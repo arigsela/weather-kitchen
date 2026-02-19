@@ -5,8 +5,7 @@ to avoid adding latency to the critical request path.
 """
 
 import uuid
-from datetime import datetime, timezone, timedelta
-from typing import Optional
+from datetime import UTC, datetime, timedelta
 from uuid import UUID
 
 from sqlalchemy.orm import Session
@@ -23,14 +22,14 @@ class AuditService:
 
     def log_action(
         self,
-        family_id: Optional[UUID],
+        family_id: UUID | None,
         action: str,
         entity_type: str,
         entity_id: UUID,
         ip: str,
-        user_agent: Optional[str] = None,
-        user_id: Optional[UUID] = None,
-        details: Optional[str] = None,
+        user_agent: str | None = None,
+        user_id: UUID | None = None,
+        details: str | None = None,
     ) -> AuditLog:
         """
         Create an audit log entry for a state-changing operation.
@@ -58,7 +57,7 @@ class AuditService:
             ip=ip,
             user_agent=user_agent,
             details=details,
-            timestamp=datetime.now(timezone.utc),
+            timestamp=datetime.now(UTC),
         )
         self.db.add(entry)
         self.db.commit()
@@ -66,11 +65,11 @@ class AuditService:
 
     def log_auth_event(
         self,
-        family_id: Optional[UUID],
+        family_id: UUID | None,
         action: str,
         ip: str,
-        user_agent: Optional[str] = None,
-        details: Optional[str] = None,
+        user_agent: str | None = None,
+        details: str | None = None,
     ) -> AuditLog:
         """
         Convenience wrapper for authentication-related events.
@@ -135,7 +134,7 @@ class AuditService:
         Returns:
             Number of rows deleted
         """
-        cutoff = datetime.now(timezone.utc) - timedelta(days=retention_days)
+        cutoff = datetime.now(UTC) - timedelta(days=retention_days)
         deleted = (
             self.db.query(AuditLog)
             .filter(AuditLog.timestamp < cutoff)
@@ -154,10 +153,10 @@ def _audit_log_background(
     entity_type: str,
     entity_id: UUID,
     ip: str,
-    family_id: Optional[UUID] = None,
-    user_id: Optional[UUID] = None,
-    user_agent: Optional[str] = None,
-    details: Optional[str] = None,
+    family_id: UUID | None = None,
+    user_id: UUID | None = None,
+    user_agent: str | None = None,
+    details: str | None = None,
 ) -> None:
     """
     Synchronous helper executed via BackgroundTasks.add_task().

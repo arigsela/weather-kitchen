@@ -2,13 +2,18 @@
 User service - business logic for user operations.
 """
 
-from typing import Optional
 from uuid import UUID
+
 from sqlalchemy.orm import Session
 
-from app.models.user import User, UserFavorite
 from app.repositories.user_repo import UserRepository
-from app.schemas.user import UserResponse, UserListResponse, IngredientResponse, FavoritesListResponse, FavoriteResponse
+from app.schemas.user import (
+    FavoriteResponse,
+    FavoritesListResponse,
+    IngredientResponse,
+    UserListResponse,
+    UserResponse,
+)
 
 
 class UserService:
@@ -22,14 +27,14 @@ class UserService:
         self,
         family_id: UUID,
         name: str,
-        emoji: Optional[str] = None,
+        emoji: str | None = None,
     ) -> UserResponse:
         """Create new user in family."""
         user = self.repository.create_user(family_id, name, emoji)
         self.db.commit()
         return UserResponse.model_validate(user)
 
-    def get_user(self, user_id: UUID, family_id: UUID) -> Optional[UserResponse]:
+    def get_user(self, user_id: UUID, family_id: UUID) -> UserResponse | None:
         """Get user by ID (verifying family ownership)."""
         user = self.repository.get_by_id_for_family(user_id, family_id)
         if not user:
@@ -50,9 +55,9 @@ class UserService:
         self,
         user_id: UUID,
         family_id: UUID,
-        name: Optional[str] = None,
-        emoji: Optional[str] = None,
-    ) -> Optional[UserResponse]:
+        name: str | None = None,
+        emoji: str | None = None,
+    ) -> UserResponse | None:
         """Update user details."""
         user = self.repository.get_by_id_for_family(user_id, family_id)
         if not user:
@@ -67,7 +72,7 @@ class UserService:
         self.db.commit()
         return UserResponse.model_validate(user)
 
-    def get_ingredients(self, user_id: UUID, family_id: UUID) -> Optional[IngredientResponse]:
+    def get_ingredients(self, user_id: UUID, family_id: UUID) -> IngredientResponse | None:
         """Get user's ingredients."""
         user = self.repository.get_by_id_for_family(user_id, family_id)
         if not user:
@@ -84,7 +89,7 @@ class UserService:
         user_id: UUID,
         family_id: UUID,
         ingredients: list[str],
-    ) -> Optional[IngredientResponse]:
+    ) -> IngredientResponse | None:
         """Replace all ingredients (PUT semantics)."""
         success = self.repository.replace_ingredients(user_id, family_id, ingredients)
         if not success:
@@ -96,7 +101,7 @@ class UserService:
             ingredients=[ing.lower() for ing in ingredients],
         )
 
-    def get_favorites(self, user_id: UUID, family_id: UUID) -> Optional[FavoritesListResponse]:
+    def get_favorites(self, user_id: UUID, family_id: UUID) -> FavoritesListResponse | None:
         """Get user's favorite recipes."""
         user = self.repository.get_by_id_for_family(user_id, family_id)
         if not user:
@@ -118,7 +123,7 @@ class UserService:
             total=len(favorites),
         )
 
-    def add_favorite(self, user_id: UUID, family_id: UUID, recipe_id: UUID) -> Optional[FavoriteResponse]:
+    def add_favorite(self, user_id: UUID, family_id: UUID, recipe_id: UUID) -> FavoriteResponse | None:
         """Add recipe to favorites (idempotent)."""
         favorite = self.repository.add_favorite(user_id, family_id, recipe_id)
         if not favorite:

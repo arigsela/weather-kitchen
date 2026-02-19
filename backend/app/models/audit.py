@@ -4,11 +4,12 @@ Used for GDPR compliance, debugging, and security auditing.
 """
 
 import uuid
-from sqlalchemy import Column, String, DateTime, ForeignKey, Text, Index
+
+from sqlalchemy import Column, DateTime, ForeignKey, Index, String, Text
 from sqlalchemy.orm import relationship
 
-from app.models.base import DeclarativeBase
 from app.database import GUID
+from app.models.base import DeclarativeBase
 
 
 class AuditLog(DeclarativeBase):

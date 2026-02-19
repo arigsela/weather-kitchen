@@ -3,16 +3,12 @@ Global exception handler middleware that returns safe error responses.
 No stack traces are exposed to clients.
 """
 
-import json
 import logging
 from uuid import uuid4
 
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import JSONResponse
-
-from app.constants import ERROR_CODES
-
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +20,7 @@ class ErrorHandlerMiddleware(BaseHTTPMiddleware):
         try:
             response = await call_next(request)
             return response
-        except Exception as exc:
+        except Exception:
             # Generate unique error ID for tracking
             error_id = str(uuid4())
 

@@ -2,17 +2,18 @@
 FastAPI dependency injection for JWT authentication and authorization.
 """
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from uuid import UUID
 
 import jwt
 from fastapi import Depends, Header, HTTPException, status
 from sqlalchemy.orm import Session
 
+from app.auth.jwt import decode_token
+from app.auth.pin import check_lockout
+from app.auth.pin import verify_pin as verify_pin_hash
 from app.database import get_db
 from app.models.family import Family
-from app.auth.jwt import decode_token
-from app.auth.pin import verify_pin as verify_pin_hash, check_lockout
 
 
 def get_token_from_header(authorization: str | None) -> str:
@@ -128,7 +129,7 @@ async def require_pin(
         family.pin_attempts += 1
         if family.pin_attempts >= 5:
             from datetime import timedelta
-            family.pin_locked_until = datetime.now(timezone.utc) + timedelta(minutes=15)
+            family.pin_locked_until = datetime.now(UTC) + timedelta(minutes=15)
         db.add(family)
         db.flush()
         remaining = max(0, 5 - family.pin_attempts)

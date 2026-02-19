@@ -3,8 +3,6 @@ Integration tests for family management endpoints.
 """
 
 from fastapi.testclient import TestClient
-import pytest
-
 
 
 def test_create_family_returns_token(test_client: TestClient):

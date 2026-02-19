@@ -2,12 +2,11 @@
 Unit tests for FamilyService - token generation, PIN lockout, consent flow.
 """
 
-from datetime import datetime, timezone, timedelta
-import pytest
+from datetime import UTC, datetime, timedelta
+
 from sqlalchemy.orm import Session
 
 from app.services.family_service import FamilyService
-from app.auth.pin import verify_pin as verify_pin_hash
 
 
 def test_create_family_generates_token(test_db: Session):
@@ -80,7 +79,7 @@ def test_pin_lockout_expires_after_15_minutes(test_db: Session, family_factory):
         service.verify_pin(family.id, "9999")
 
     # Set lockout to past
-    family.pin_locked_until = datetime.now(timezone.utc) - timedelta(seconds=1)
+    family.pin_locked_until = datetime.now(UTC) - timedelta(seconds=1)
     test_db.commit()
 
     # Should now work
@@ -153,7 +152,7 @@ def test_hard_delete_removes_family(test_db: Session, family_factory):
 def test_export_family_data_includes_all_data(test_db: Session, family_factory, user_factory):
     """Test that family data export includes all relevant data."""
     family, token = family_factory(test_db)
-    user = user_factory(test_db, family_id=family.id)
+    user = user_factory(test_db, family_id=family.id)  # noqa: F841
 
     service = FamilyService(test_db)
     exported = service.export_family_data(family.id)

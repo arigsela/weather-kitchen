@@ -3,13 +3,13 @@ Recipe service - business logic for recipe operations.
 """
 
 import math
-from typing import Optional, List
 from uuid import UUID
+
 from sqlalchemy.orm import Session
 
 from app.models.recipe import Recipe
 from app.repositories.recipe_repo import RecipeRepository
-from app.schemas.recipe import RecipeResponse, RecipeListItem
+from app.schemas.recipe import RecipeListItem, RecipeResponse
 
 
 class RecipeService:
@@ -19,7 +19,7 @@ class RecipeService:
         self.db = db
         self.repository = RecipeRepository(db)
 
-    def get_recipe(self, recipe_id: UUID) -> Optional[RecipeResponse]:
+    def get_recipe(self, recipe_id: UUID) -> RecipeResponse | None:
         """
         Get recipe by ID.
 
@@ -37,10 +37,10 @@ class RecipeService:
 
     def list_recipes(
         self,
-        weather: Optional[str] = None,
-        category: Optional[str] = None,
-        tags: Optional[List[str]] = None,
-        ingredients: Optional[List[str]] = None,
+        weather: str | None = None,
+        category: str | None = None,
+        tags: list[str] | None = None,
+        ingredients: list[str] | None = None,
         limit: int = 20,
         offset: int = 0,
     ) -> dict:
@@ -79,7 +79,7 @@ class RecipeService:
             "items": items,
         }
 
-    def search_recipes(self, query_text: str, limit: int = 20) -> List[RecipeResponse]:
+    def search_recipes(self, query_text: str, limit: int = 20) -> list[RecipeResponse]:
         """
         Search recipes by name.
 
@@ -154,7 +154,7 @@ class RecipeService:
         """
         return recipe_serves * multiplier
 
-    def categorize_by_weather(self, recipes: List[Recipe]) -> dict[str, List[Recipe]]:
+    def categorize_by_weather(self, recipes: list[Recipe]) -> dict[str, list[Recipe]]:
         """
         Organize recipes by weather type.
 
@@ -174,9 +174,9 @@ class RecipeService:
 
     def filter_by_ingredients(
         self,
-        recipes: List[Recipe],
-        available_ingredients: List[str],
-    ) -> List[Recipe]:
+        recipes: list[Recipe],
+        available_ingredients: list[str],
+    ) -> list[Recipe]:
         """
         Filter recipes by available ingredients.
 

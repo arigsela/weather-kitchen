@@ -2,13 +2,12 @@
 User repository - data access layer for user operations.
 """
 
-from typing import Optional
+from datetime import UTC, datetime
 from uuid import UUID
-from datetime import datetime, timezone
+
 from sqlalchemy.orm import Session, selectinload
 
-from app.models.user import User, UserIngredient, UserFavorite
-from app.models.recipe import Recipe
+from app.models.user import User, UserFavorite, UserIngredient
 from app.repositories.base import BaseRepository
 
 
@@ -22,7 +21,7 @@ class UserRepository(BaseRepository[User]):
         self,
         family_id: UUID,
         name: str,
-        emoji: Optional[str] = None,
+        emoji: str | None = None,
     ) -> User:
         """Create new user in family."""
         import uuid
@@ -31,14 +30,14 @@ class UserRepository(BaseRepository[User]):
             family_id=family_id,
             name=name,
             emoji=emoji,
-            created_at=datetime.now(timezone.utc),
-            updated_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
+            updated_at=datetime.now(UTC),
         )
         self.db.add(user)
         self.db.flush()
         return user
 
-    def get_by_id_for_family(self, user_id: UUID, family_id: UUID) -> Optional[User]:
+    def get_by_id_for_family(self, user_id: UUID, family_id: UUID) -> User | None:
         """Get user by ID, verifying family ownership."""
         return self.db.query(User).filter(
             User.id == user_id,
@@ -85,8 +84,8 @@ class UserRepository(BaseRepository[User]):
                 id=uuid.uuid4(),
                 user_id=user_id,
                 ingredient_name=ingredient_name.lower(),
-                created_at=datetime.now(timezone.utc),
-                updated_at=datetime.now(timezone.utc),
+                created_at=datetime.now(UTC),
+                updated_at=datetime.now(UTC),
             )
             self.db.add(user_ing)
 
@@ -110,7 +109,7 @@ class UserRepository(BaseRepository[User]):
             UserFavorite.user_id == user_id,
         ).order_by(UserFavorite.added_at.desc()).all()
 
-    def add_favorite(self, user_id: UUID, family_id: UUID, recipe_id: UUID) -> Optional[UserFavorite]:
+    def add_favorite(self, user_id: UUID, family_id: UUID, recipe_id: UUID) -> UserFavorite | None:
         """Add recipe to favorites (idempotent - returns existing if already exists)."""
         # Verify family ownership
         user = self.db.query(User).filter(
@@ -136,7 +135,7 @@ class UserRepository(BaseRepository[User]):
             id=uuid.uuid4(),
             user_id=user_id,
             recipe_id=recipe_id,
-            added_at=datetime.now(timezone.utc),
+            added_at=datetime.now(UTC),
         )
         self.db.add(favorite)
         self.db.flush()
@@ -154,7 +153,7 @@ class UserRepository(BaseRepository[User]):
             return False
 
         # Delete favorite
-        result = self.db.query(UserFavorite).filter(
+        self.db.query(UserFavorite).filter(
             UserFavorite.user_id == user_id,
             UserFavorite.recipe_id == recipe_id,
         ).delete()

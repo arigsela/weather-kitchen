@@ -5,6 +5,7 @@ malformed, manipulated, or expired tokens are consistently rejected with 401.
 """
 
 import uuid
+
 import pytest
 from fastapi.testclient import TestClient
 

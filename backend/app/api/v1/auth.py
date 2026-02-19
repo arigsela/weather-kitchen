@@ -5,10 +5,10 @@ Authentication endpoints: token refresh and logout.
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from app.database import get_db
-from app.services.family_service import FamilyService
-from app.schemas.auth import RefreshRequest, LogoutRequest, TokenResponse, SuccessResponse
 from app.config import settings
+from app.database import get_db
+from app.schemas.auth import LogoutRequest, RefreshRequest, SuccessResponse, TokenResponse
+from app.services.family_service import FamilyService
 
 router = APIRouter(prefix="/api/v1/auth", tags=["auth"])
 
@@ -38,7 +38,7 @@ async def refresh_token(
     return TokenResponse(
         access_token=access_token,
         refresh_token=new_refresh_token,
-        token_type="bearer",
+        token_type="bearer",  # noqa: S106
         expires_in=settings.jwt_access_token_expire_minutes * 60,
     )
 

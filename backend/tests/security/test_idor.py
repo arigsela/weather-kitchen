@@ -4,7 +4,6 @@ Tests verify cross-family access is denied with 404 responses.
 """
 
 from fastapi.testclient import TestClient
-import pytest
 
 
 def test_cannot_get_user_from_different_family(test_client: TestClient, family_factory, user_factory, test_db):

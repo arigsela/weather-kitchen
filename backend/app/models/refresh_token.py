@@ -3,12 +3,13 @@ RefreshToken model - stores hashed refresh tokens for revocation support.
 """
 
 import uuid
-from datetime import datetime, timezone
-from sqlalchemy import Column, String, Boolean, DateTime, ForeignKey
+from datetime import UTC, datetime
+
+from sqlalchemy import Boolean, Column, DateTime, ForeignKey, String
 from sqlalchemy.orm import relationship
 
-from app.models.base import DeclarativeBase
 from app.database import GUID
+from app.models.base import DeclarativeBase
 
 
 class RefreshToken(DeclarativeBase):
@@ -24,7 +25,7 @@ class RefreshToken(DeclarativeBase):
     token_hash = Column(String(64), unique=True, nullable=False, index=True)
     expires_at = Column(DateTime, nullable=False)
     revoked = Column(Boolean, default=False, nullable=False)
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    created_at = Column(DateTime, default=lambda: datetime.now(UTC), nullable=False)
 
     family = relationship("Family", back_populates="refresh_tokens")
 

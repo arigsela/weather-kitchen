@@ -2,15 +2,15 @@
 Recipe endpoints - public API for recipe discovery.
 """
 
-from typing import Optional, List
 from uuid import UUID
-from fastapi import APIRouter, Depends, HTTPException, Query, Path
+
+from fastapi import APIRouter, Depends, HTTPException, Path, Query
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.services.recipe_service import RecipeService
-from app.schemas.recipe import RecipeResponse, RecipeListResponse
 from app.middleware.request_id import get_request_id
+from app.schemas.recipe import RecipeListResponse, RecipeResponse
+from app.services.recipe_service import RecipeService
 
 router = APIRouter(prefix="/api/v1", tags=["recipes"])
 
@@ -22,10 +22,10 @@ router = APIRouter(prefix="/api/v1", tags=["recipes"])
     description="Get paginated list of recipes with optional filtering by weather, category, tags, and ingredients",
 )
 async def list_recipes(
-    weather: Optional[str] = Query(None, description="Filter by weather type"),
-    category: Optional[str] = Query(None, description="Filter by category"),
-    tags: Optional[List[str]] = Query(None, description="Filter by tags (comma-separated)"),
-    ingredients: Optional[List[str]] = Query(None, description="Filter by ingredients (comma-separated)"),
+    weather: str | None = Query(None, description="Filter by weather type"),
+    category: str | None = Query(None, description="Filter by category"),
+    tags: list[str] | None = Query(None, description="Filter by tags (comma-separated)"),
+    ingredients: list[str] | None = Query(None, description="Filter by ingredients (comma-separated)"),
     limit: int = Query(20, ge=1, le=100, description="Items per page"),
     offset: int = Query(0, ge=0, description="Items to skip"),
     db: Session = Depends(get_db),

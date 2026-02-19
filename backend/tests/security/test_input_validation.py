@@ -7,7 +7,6 @@ consistently rejected with 422 Unprocessable Entity responses.
 
 from fastapi.testclient import TestClient
 
-
 # ---------------------------------------------------------------------------
 # Family creation validation tests
 # ---------------------------------------------------------------------------

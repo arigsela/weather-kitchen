@@ -3,14 +3,13 @@ Refresh token repository - data access for JWT refresh tokens.
 """
 
 import uuid
-from datetime import datetime, timezone
-from typing import Optional
+from datetime import UTC, datetime
 from uuid import UUID
 
 from sqlalchemy.orm import Session
 
-from app.models.refresh_token import RefreshToken
 from app.auth.jwt import hash_refresh_token
+from app.models.refresh_token import RefreshToken
 
 
 class RefreshTokenRepository:
@@ -27,13 +26,13 @@ class RefreshTokenRepository:
             token_hash=hash_refresh_token(token),
             expires_at=expires_at,
             revoked=False,
-            created_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
         )
         self.db.add(record)
         self.db.flush()
         return record
 
-    def get_by_token(self, token: str) -> Optional[RefreshToken]:
+    def get_by_token(self, token: str) -> RefreshToken | None:
         """Lookup a refresh token record by plaintext token (hashed for lookup)."""
         token_hash = hash_refresh_token(token)
         return self.db.query(RefreshToken).filter(
@@ -63,7 +62,7 @@ class RefreshTokenRepository:
 
     def cleanup_expired(self) -> int:
         """Delete expired and revoked tokens. Returns count deleted."""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         records = self.db.query(RefreshToken).filter(
             (RefreshToken.expires_at < now) | (RefreshToken.revoked == True)  # noqa: E712
         ).all()

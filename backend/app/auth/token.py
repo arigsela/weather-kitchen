@@ -4,8 +4,8 @@ Tokens are high-entropy random values (256 bits) encoded as URL-safe base64.
 Hashes are SHA256 digests stored in the database for comparison.
 """
 
-import secrets
 import hashlib
+import secrets
 
 from app.config import settings
 

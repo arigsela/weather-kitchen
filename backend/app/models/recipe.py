@@ -3,11 +3,12 @@ Recipe models: Recipe, RecipeIngredient, RecipeStep, RecipeTag.
 """
 
 import uuid
-from sqlalchemy import Column, String, Integer, ForeignKey, Text, Index
+
+from sqlalchemy import Column, ForeignKey, Index, Integer, String, Text
 from sqlalchemy.orm import relationship
 
-from app.models.base import DeclarativeBase, UUIDMixin, TimestampMixin
 from app.database import GUID
+from app.models.base import DeclarativeBase, TimestampMixin
 
 
 class Recipe(DeclarativeBase):

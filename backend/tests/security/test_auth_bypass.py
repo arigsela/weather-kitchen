@@ -4,7 +4,6 @@ Tests verify that missing or invalid tokens are properly rejected.
 """
 
 from fastapi.testclient import TestClient
-import pytest
 
 
 def test_missing_auth_header_returns_401(test_client: TestClient, family_factory, test_db):
