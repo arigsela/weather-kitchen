@@ -4,8 +4,9 @@ Uses bcrypt directly (not passlib, which is unmaintained).
 PINs are 4-6 digit numeric codes for sensitive operations.
 """
 
+from datetime import UTC, datetime, timedelta
+
 import bcrypt
-from datetime import datetime, timedelta, timezone
 
 from app.config import settings
 
@@ -85,7 +86,7 @@ def check_lockout(pin_locked_until: datetime | None) -> tuple[bool, int]:
     if pin_locked_until is None:
         return False, 0
 
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     if now < pin_locked_until:
         remaining_seconds = int((pin_locked_until - now).total_seconds())
         return True, remaining_seconds
@@ -104,7 +105,7 @@ def get_lockout_until() -> datetime:
         >>> lockout_time = get_lockout_until()
         >>> # lockout_time is now + 15 minutes (default)
     """
-    return datetime.now(timezone.utc) + timedelta(minutes=settings.pin_lockout_minutes)
+    return datetime.now(UTC) + timedelta(minutes=settings.pin_lockout_minutes)
 
 
 def should_lockout(pin_attempts: int) -> bool:

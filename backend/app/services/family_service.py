@@ -2,18 +2,18 @@
 Family service - business logic for family operations.
 """
 
-import hashlib
-import secrets
-from typing import Optional
+from datetime import UTC, datetime, timedelta
 from uuid import UUID
-from datetime import datetime, timezone
+
 from sqlalchemy.orm import Session
 
-from app.models.family import Family
+from app.auth.jwt import create_access_token, create_refresh_token
+from app.auth.pin import hash_pin
+from app.auth.pin import verify_pin as verify_pin_hash
+from app.config import settings
 from app.repositories.family_repo import FamilyRepository
-from app.auth.token import generate_api_token, hash_token as hash_api_token
-from app.auth.pin import hash_pin, verify_pin as verify_pin_hash
-from app.schemas.family import FamilyResponse, FamilyCreateResponse
+from app.repositories.refresh_token_repo import RefreshTokenRepository
+from app.schemas.family import FamilyResponse
 
 
 class FamilyService:
@@ -22,57 +22,55 @@ class FamilyService:
     def __init__(self, db: Session):
         self.db = db
         self.repository = FamilyRepository(db)
+        self.refresh_repo = RefreshTokenRepository(db)
 
     def create_family(
         self,
         name: str,
         family_size: int,
         admin_pin: str,
-    ) -> tuple[FamilyResponse, str]:
+    ) -> tuple[FamilyResponse, str, str]:
         """
-        Create new family account.
-
-        Args:
-            name: Family name
-            family_size: Number of family members
-            admin_pin: 4-6 digit numeric PIN
+        Create new family account and issue JWT token pair.
 
         Returns:
-            Tuple of (family response, plaintext token)
+            Tuple of (family_response, access_token, refresh_token)
         """
-        # Generate API token (return plaintext + hash)
-        plaintext_token, token_hash = generate_api_token()
-
-        # Hash PIN
         pin_hash = hash_pin(admin_pin)
 
-        # Create family
         family = self.repository.create_family(
             name=name,
             family_size=family_size,
-            api_token_hash=token_hash,
             admin_pin_hash=pin_hash,
         )
+        self.db.flush()
+
+        # Issue JWT tokens
+        access_token = create_access_token(str(family.id))
+        refresh_token, _ = create_refresh_token(str(family.id))
+
+        # Persist refresh token
+        expires_at = datetime.now(UTC) + timedelta(days=settings.jwt_refresh_token_expire_days)
+        self.refresh_repo.create(family.id, refresh_token, expires_at)
 
         self.db.commit()
 
         response = FamilyResponse.model_validate(family)
-        return response, plaintext_token
+        return response, access_token, refresh_token
 
-    def get_family(self, family_id: UUID) -> Optional[FamilyResponse]:
+    def get_family(self, family_id: UUID) -> FamilyResponse | None:
         """Get family by ID."""
         family = self.repository.get_by_id(family_id)
         if not family:
             return None
-
         return FamilyResponse.model_validate(family)
 
     def update_family(
         self,
         family_id: UUID,
-        name: Optional[str] = None,
-        family_size: Optional[int] = None,
-    ) -> Optional[FamilyResponse]:
+        name: str | None = None,
+        family_size: int | None = None,
+    ) -> FamilyResponse | None:
         """Update family settings."""
         family = self.repository.get_by_id(family_id)
         if not family:
@@ -83,7 +81,7 @@ class FamilyService:
         if family_size is not None:
             family.family_size = family_size
 
-        family.updated_at = datetime.now(timezone.utc)
+        family.updated_at = datetime.now(UTC)
         self.db.add(family)
         self.db.commit()
 
@@ -103,147 +101,126 @@ class FamilyService:
             self.db.commit()
         return success
 
-    def rotate_token(self, family_id: UUID) -> Optional[str]:
+    def rotate_tokens(self, family_id: UUID) -> tuple[str, str]:
         """
-        Rotate API token (generate new token, invalidate old).
-
-        Args:
-            family_id: Family ID
+        Revoke all existing refresh tokens and issue a new JWT pair.
+        PIN verification must be done by the caller before calling this.
 
         Returns:
-            New plaintext token or None if family not found
+            Tuple of (access_token, refresh_token)
         """
-        plaintext_token, new_token_hash = generate_api_token()
+        # Revoke all existing refresh tokens for this family
+        self.refresh_repo.revoke_all_for_family(family_id)
 
-        family = self.repository.update_token_hash(family_id, new_token_hash)
-        if not family:
-            return None
+        # Issue new pair
+        access_token = create_access_token(str(family_id))
+        refresh_token, _ = create_refresh_token(str(family_id))
+
+        expires_at = datetime.now(UTC) + timedelta(days=settings.jwt_refresh_token_expire_days)
+        self.refresh_repo.create(family_id, refresh_token, expires_at)
 
         self.db.commit()
-        return plaintext_token
+        return access_token, refresh_token
 
-    def verify_pin(self, family_id: UUID, admin_pin: str) -> tuple[bool, Optional[str]]:
+    def refresh_access_token(self, refresh_token: str) -> tuple[str, str] | None:
+        """
+        Validate a refresh token and issue a new access + refresh pair (rotation).
+
+        Returns:
+            Tuple of (new_access_token, new_refresh_token) or None if invalid
+        """
+        import jwt as pyjwt
+
+        from app.auth.jwt import decode_token
+
+        # Decode JWT claims first
+        try:
+            payload = decode_token(refresh_token)
+        except pyjwt.InvalidTokenError:
+            return None
+
+        if payload.get("type") != "refresh":
+            return None
+
+        family_id = payload.get("sub")
+        if not family_id:
+            return None
+
+        # Check DB record: must exist, not revoked, not expired
+        record = self.refresh_repo.get_by_token(refresh_token)
+        if not record or record.revoked:
+            return None
+
+        now = datetime.now(UTC)
+        expires_at = record.expires_at
+        if expires_at.tzinfo is None:
+            expires_at = expires_at.replace(tzinfo=UTC)
+        if expires_at < now:
+            return None
+
+        # Revoke old refresh token (rotation)
+        record.revoked = True
+        self.db.add(record)
+
+        # Issue new pair
+        new_access = create_access_token(family_id)
+        new_refresh, _ = create_refresh_token(family_id)
+
+        new_expires_at = now + timedelta(days=settings.jwt_refresh_token_expire_days)
+        self.refresh_repo.create(family_id, new_refresh, new_expires_at)
+
+        self.db.commit()
+        return new_access, new_refresh
+
+    def logout(self, refresh_token: str) -> bool:
+        """Revoke a refresh token (logout)."""
+        revoked = self.refresh_repo.revoke(refresh_token)
+        if revoked:
+            self.db.commit()
+        return revoked
+
+    def verify_pin(self, family_id: UUID, admin_pin: str) -> tuple[bool, str | None]:
         """
         Verify PIN and handle lockout/attempt tracking.
 
-        Args:
-            family_id: Family ID
-            admin_pin: PIN to verify
-
         Returns:
-            Tuple of (success: bool, lockout_message: str or None)
+            Tuple of (success: bool, error_message: str | None)
         """
         family = self.repository.get_by_id(family_id)
         if not family:
             return False, "Family not found"
 
-        # Check lockout (handle both naive and aware datetimes from SQLite)
         if family.pin_locked_until:
             locked_until = family.pin_locked_until
-            # Make aware if naive (SQLite doesn't store timezone)
             if locked_until.tzinfo is None:
-                locked_until = locked_until.replace(tzinfo=timezone.utc)
-            if locked_until > datetime.now(timezone.utc):
+                locked_until = locked_until.replace(tzinfo=UTC)
+            if locked_until > datetime.now(UTC):
                 return False, f"Locked until {locked_until.isoformat()}"
 
-        # Verify PIN
         pin_correct = verify_pin_hash(admin_pin, family.admin_pin_hash)
 
         if not pin_correct:
-            # Increment attempts
             self.repository.update_pin_attempts(family_id, family.pin_attempts + 1)
             self.db.commit()
             remaining = max(0, 5 - (family.pin_attempts + 1))
             return False, f"Invalid PIN ({remaining} attempts remaining)"
 
-        # PIN correct - reset attempts
         self.repository.reset_pin_attempts(family_id)
         self.db.commit()
         return True, None
 
-    def request_consent_code(self, family_id: UUID) -> Optional[str]:
-        """
-        Generate and store consent verification code.
-
-        Args:
-            family_id: Family ID
-
-        Returns:
-            6-digit code or None if family not found
-        """
-        family = self.repository.get_by_id(family_id)
-        if not family:
-            return None
-
-        # Generate 6-digit code
-        code = secrets.randbelow(999999)
-        code_str = f"{code:06d}"
-
-        # Hash code
-        code_hash = hashlib.sha256(code_str.encode()).hexdigest()
-
-        # Store in family
-        self.repository.set_consent_code(family_id, code_hash, expires_in_minutes=24*60)
-        self.db.commit()
-
-        return code_str
-
-    def verify_consent_code(self, family_id: UUID, code: str) -> bool:
-        """
-        Verify consent code and set consent if valid.
-
-        Args:
-            family_id: Family ID
-            code: 6-digit code to verify
-
-        Returns:
-            True if code valid and consent set, False otherwise
-        """
-        family = self.repository.get_by_id(family_id)
-        if not family or not family.consent_code_hash:
-            return False
-
-        # Check expiry (handle both naive and aware datetimes from SQLite)
-        if family.consent_code_expires_at:
-            expires_at = family.consent_code_expires_at
-            # Make aware if naive (SQLite doesn't store timezone)
-            if expires_at.tzinfo is None:
-                expires_at = expires_at.replace(tzinfo=timezone.utc)
-            if expires_at < datetime.now(timezone.utc):
-                self.repository.clear_consent_code(family_id)
-                self.db.commit()
-                return False
-
-        # Verify code
-        code_hash = hashlib.sha256(code.encode()).hexdigest()
-        if code_hash != family.consent_code_hash:
-            return False
-
-        # Set consent
-        self.repository.set_consent(family_id, True)
-        self.repository.clear_consent_code(family_id)
-        self.db.commit()
-        return True
-
-    def export_family_data(self, family_id: UUID) -> Optional[dict]:
+    def export_family_data(self, family_id: UUID) -> dict | None:
         """Export all family data for GDPR compliance."""
         family = self.repository.get_by_id(family_id, include_inactive=True)
         if not family:
             return None
 
-        # Get all users
-        users = self.db.query(Family).filter(Family.id == family_id).first()
-        if not users:
-            users = []
-        else:
-            users = [{"id": str(u.id), "name": u.name} for u in users.users] if users.users else []
-
-        # Get audit log
-        audit_log = []  # TODO: Implement when AuditLog service exists
+        users = [{"id": str(u.id), "name": u.name} for u in family.users] if family.users else []
+        audit_log = []
 
         return {
             "family": FamilyResponse.model_validate(family).model_dump(),
             "users": users,
             "audit_log": audit_log,
-            "export_date": datetime.now(timezone.utc).isoformat(),
+            "export_date": datetime.now(UTC).isoformat(),
         }

@@ -4,12 +4,12 @@ Includes GUID TypeDecorator for UUID support across SQLite and PostgreSQL.
 """
 
 import uuid
-from typing import Generator
+from collections.abc import Generator
 
 from sqlalchemy import create_engine, event
-from sqlalchemy.orm import Session, sessionmaker
-from sqlalchemy.types import TypeDecorator, CHAR
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
+from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.types import CHAR, TypeDecorator
 
 from app.config import settings
 
@@ -60,11 +60,13 @@ engine = create_engine(
 
 # Enable SQLite WAL mode for concurrent read/write
 if "sqlite" in settings.database_url:
+
     @event.listens_for(engine, "connect")
     def set_sqlite_pragma(dbapi_conn, connection_record):
         cursor = dbapi_conn.cursor()
         cursor.execute("PRAGMA journal_mode=WAL")
         cursor.close()
+
 
 # Session factory
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)

@@ -2,22 +2,21 @@
 Test fixtures and configuration for pytest.
 """
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from uuid import uuid4
-import pytest
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, Session
-from sqlalchemy.pool import StaticPool
-from fastapi.testclient import TestClient
 
-from app.main import create_app
-from app.models.base import DeclarativeBase
-from app.models.family import Family
-from app.models.user import User
-from app.models.recipe import Recipe
+import pytest
+from fastapi.testclient import TestClient
+from sqlalchemy import create_engine
+from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.pool import StaticPool
+
 from app.database import get_db
-from app.auth.token import generate_api_token, hash_token
-from app.auth.pin import hash_pin
+from app.main import create_app
+from app.models import DeclarativeBase  # imports all models, ensuring all tables are registered
+from app.models.family import Family
+from app.models.recipe import Recipe
+from app.models.user import User
 
 
 @pytest.fixture(scope="function")
@@ -54,14 +53,17 @@ def test_client(test_db):
 @pytest.fixture
 def auth_headers():
     """Helper to create authorization headers."""
+
     def _auth_headers(token: str = "test-token") -> dict:
         return {"Authorization": f"Bearer {token}"}
+
     return _auth_headers
 
 
 @pytest.fixture
 def family_factory(test_db):
     """Factory for creating test families."""
+
     def _create_family(
         db: Session = None,
         name: str = "Test Family",
@@ -75,8 +77,9 @@ def family_factory(test_db):
             db = test_db
 
         from app.services.family_service import FamilyService
+
         service = FamilyService(db)
-        response, token = service.create_family(
+        response, access_token, refresh_token = service.create_family(
             name=name,
             family_size=family_size,
             admin_pin=admin_pin,
@@ -84,7 +87,8 @@ def family_factory(test_db):
 
         # Retrieve the created family object
         family = db.query(Family).filter(Family.id == response.id).first()
-        return family, token
+        # Return access_token — used as Bearer token in Authorization headers
+        return family, access_token
 
     return _create_family
 
@@ -92,20 +96,21 @@ def family_factory(test_db):
 @pytest.fixture
 def user_factory():
     """Factory for creating test users."""
+
     def _create_user(
         db: Session,
         family_id,
         name: str = "Test User",
-        age: int = 10,
+        emoji: str | None = None,
     ) -> User:
         """Create a user in a family."""
         user = User(
             id=uuid4(),
             family_id=family_id,
             name=name,
-            age=age,
-            created_at=datetime.now(timezone.utc),
-            updated_at=datetime.now(timezone.utc),
+            emoji=emoji,
+            created_at=datetime.now(UTC),
+            updated_at=datetime.now(UTC),
         )
         db.add(user)
         db.commit()
@@ -117,6 +122,7 @@ def user_factory():
 @pytest.fixture
 def recipe_factory():
     """Factory for creating test recipes."""
+
     def _create_recipe(
         db: Session,
         name: str = "Test Recipe",
@@ -134,8 +140,8 @@ def recipe_factory():
             weather=weather,
             category=category,
             version_added="1.0.0",
-            created_at=datetime.now(timezone.utc),
-            updated_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
+            updated_at=datetime.now(UTC),
         )
         db.add(recipe)
         db.commit()

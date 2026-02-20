@@ -4,7 +4,6 @@ Tests verify that missing or invalid tokens are properly rejected.
 """
 
 from fastapi.testclient import TestClient
-import pytest
 
 
 def test_missing_auth_header_returns_401(test_client: TestClient, family_factory, test_db):
@@ -65,7 +64,9 @@ def test_get_user_requires_auth(test_client: TestClient, family_factory, user_fa
     assert response.status_code == 401
 
 
-def test_get_ingredients_requires_auth(test_client: TestClient, family_factory, user_factory, test_db):
+def test_get_ingredients_requires_auth(
+    test_client: TestClient, family_factory, user_factory, test_db
+):
     """Test that getting ingredients requires authentication."""
     family, token = family_factory(test_db)
     user = user_factory(test_db, family_id=family.id)
@@ -74,7 +75,9 @@ def test_get_ingredients_requires_auth(test_client: TestClient, family_factory, 
     assert response.status_code == 401
 
 
-def test_update_ingredients_requires_auth(test_client: TestClient, family_factory, user_factory, test_db):
+def test_update_ingredients_requires_auth(
+    test_client: TestClient, family_factory, user_factory, test_db
+):
     """Test that updating ingredients requires authentication."""
     family, token = family_factory(test_db)
     user = user_factory(test_db, family_id=family.id)
@@ -86,7 +89,9 @@ def test_update_ingredients_requires_auth(test_client: TestClient, family_factor
     assert response.status_code == 401
 
 
-def test_get_favorites_requires_auth(test_client: TestClient, family_factory, user_factory, test_db):
+def test_get_favorites_requires_auth(
+    test_client: TestClient, family_factory, user_factory, test_db
+):
     """Test that getting favorites requires authentication."""
     family, token = family_factory(test_db)
     user = user_factory(test_db, family_id=family.id)
@@ -95,27 +100,27 @@ def test_get_favorites_requires_auth(test_client: TestClient, family_factory, us
     assert response.status_code == 401
 
 
-def test_add_favorite_requires_auth(test_client: TestClient, family_factory, user_factory, recipe_factory, test_db):
+def test_add_favorite_requires_auth(
+    test_client: TestClient, family_factory, user_factory, recipe_factory, test_db
+):
     """Test that adding favorite requires authentication."""
     family, token = family_factory(test_db)
     user = user_factory(test_db, family_id=family.id)
     recipe = recipe_factory(test_db)
 
-    response = test_client.put(
-        f"/api/v1/users/{user.id}/favorites/{recipe.id}"
-    )
+    response = test_client.put(f"/api/v1/users/{user.id}/favorites/{recipe.id}")
     assert response.status_code == 401
 
 
-def test_remove_favorite_requires_auth(test_client: TestClient, family_factory, user_factory, recipe_factory, test_db):
+def test_remove_favorite_requires_auth(
+    test_client: TestClient, family_factory, user_factory, recipe_factory, test_db
+):
     """Test that removing favorite requires authentication."""
     family, token = family_factory(test_db)
     user = user_factory(test_db, family_id=family.id)
     recipe = recipe_factory(test_db)
 
-    response = test_client.delete(
-        f"/api/v1/users/{user.id}/favorites/{recipe.id}"
-    )
+    response = test_client.delete(f"/api/v1/users/{user.id}/favorites/{recipe.id}")
     assert response.status_code == 401
 
 
@@ -179,47 +184,22 @@ def test_export_family_requires_auth(test_client: TestClient, family_factory, te
     assert response.status_code == 401
 
 
-def test_request_consent_requires_auth(test_client: TestClient, family_factory, test_db):
-    """Test that requesting consent requires authentication."""
-    family, token = family_factory(test_db)
-
-    response = test_client.post(f"/api/v1/families/{family.id}/consent/request")
-    assert response.status_code == 401
-
-
-def test_verify_consent_requires_auth(test_client: TestClient, family_factory, test_db):
-    """Test that verifying consent requires authentication."""
-    family, token = family_factory(test_db)
-
-    response = test_client.post(
-        f"/api/v1/families/{family.id}/consent/verify",
-        json={"consent_code": "123456", "admin_pin": "1234"},
-    )
-    assert response.status_code == 401
-
-
-def test_rotated_old_token_invalid(test_client: TestClient, family_factory, test_db):
-    """Test that old token becomes invalid after rotation."""
+def test_rotated_new_token_works(test_client: TestClient, family_factory, test_db):
+    """After JWT rotation, the new access token should grant access."""
     family, old_token = family_factory(test_db, admin_pin="1234")
 
-    # Rotate token to get new token
+    # Rotate tokens
     response = test_client.post(
         f"/api/v1/families/{family.id}/token/rotate",
         json={"admin_pin": "1234"},
         headers={"Authorization": f"Bearer {old_token}"},
     )
-    new_token = response.json()["api_token"]
+    assert response.status_code == 200
+    new_access = response.json()["access_token"]
 
-    # Old token should now fail
+    # New access token should work
     response = test_client.get(
         f"/api/v1/families/{family.id}",
-        headers={"Authorization": f"Bearer {old_token}"},
-    )
-    assert response.status_code == 401
-
-    # New token should work
-    response = test_client.get(
-        f"/api/v1/families/{family.id}",
-        headers={"Authorization": f"Bearer {new_token}"},
+        headers={"Authorization": f"Bearer {new_access}"},
     )
     assert response.status_code == 200

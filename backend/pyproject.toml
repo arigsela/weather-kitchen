@@ -9,19 +9,17 @@ dependencies = [
     "fastapi>=0.129.0",
     "uvicorn[standard]>=0.40.0",
     "python-multipart>=0.0.22",
-
     # Database
     "sqlalchemy[asyncio]>=2.0.46",
     "alembic>=1.18.4",
-
     # Data validation
     "pydantic>=2.12",
     "pydantic-settings>=2.0",
     "email-validator>=2.0",
-
     # Security - Use bcrypt directly (not passlib)
     "bcrypt>=5.0.0",
-
+    # JWT Authentication
+    "pyjwt>=2.9.0",
     # Production
     "gunicorn>=23.0.0",
 ]
@@ -54,7 +52,21 @@ dev-dependencies = [
 target-version = "py311"
 line-length = 100
 lint.select = ["E", "F", "W", "I", "N", "UP", "S"]
-lint.ignore = ["E501"]  # Line length handled separately
+lint.ignore = [
+    "E501",   # Line length handled separately
+    "S104",   # Binding to 0.0.0.0 is intentional for containerised services
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = [
+    "S101",   # assert is the standard assertion mechanism in pytest
+    "S105",   # test helpers may contain token/secret literals
+    "S106",   # test helpers may pass literal token values
+    "S107",   # test helpers may use literal passwords
+]
+"app/config.py" = [
+    "S105",   # _DEV_JWT_SECRET is an intentional insecure-by-design dev fallback
+]
 
 [tool.ruff.lint.isort]
 known-first-party = ["app"]

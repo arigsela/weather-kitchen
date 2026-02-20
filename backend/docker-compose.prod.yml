@@ -1,0 +1,45 @@
+services:
+  api:
+    image: weather-kitchen-api:${IMAGE_TAG:-latest}
+    container_name: weather-kitchen-api
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - DEBUG=false
+      - LOG_LEVEL=INFO
+      - ENVIRONMENT=production
+      # REQUIRED: set via environment or secrets manager — never commit real values
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+      - JWT_ACCESS_TOKEN_EXPIRE_MINUTES=${JWT_ACCESS_TOKEN_EXPIRE_MINUTES:-15}
+      - JWT_REFRESH_TOKEN_EXPIRE_DAYS=${JWT_REFRESH_TOKEN_EXPIRE_DAYS:-7}
+      - BCRYPT_ROUNDS=${BCRYPT_ROUNDS:-12}
+      - CORS_ORIGINS=${CORS_ORIGINS:-'["https://yourdomain.com"]'}
+      - RATE_LIMIT_ENABLED=true
+    volumes:
+      - app_data:/app/data
+    command: >
+      sh -c "python -m alembic upgrade head &&
+             gunicorn app.main:app
+               --worker-class uvicorn.workers.UvicornWorker
+               --workers 4
+               --bind 0.0.0.0:8000
+               --timeout 30
+               --keep-alive 5
+               --access-logfile -
+               --error-logfile -"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+volumes:
+  app_data:
+    driver: local
+
+networks:
+  default:
+    name: weather-kitchen-prod-network

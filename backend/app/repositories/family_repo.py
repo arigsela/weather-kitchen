@@ -2,11 +2,10 @@
 Family repository - data access layer for family operations.
 """
 
-from typing import Optional
+from datetime import UTC, datetime, timedelta
 from uuid import UUID
-from datetime import datetime, timezone, timedelta
+
 from sqlalchemy.orm import Session
-from sqlalchemy import select
 
 from app.models.family import Family
 from app.repositories.base import BaseRepository
@@ -18,22 +17,17 @@ class FamilyRepository(BaseRepository[Family]):
     def __init__(self, db: Session):
         super().__init__(db, Family)
 
-    def get_by_token_hash(self, token_hash: str) -> Optional[Family]:
-        """Get family by API token hash."""
-        return self.db.query(Family).filter(Family.api_token_hash == token_hash).first()
-
-    def get_by_id(self, family_id: UUID, include_inactive: bool = False) -> Optional[Family]:
+    def get_by_id(self, family_id: UUID, include_inactive: bool = False) -> Family | None:
         """Get family by ID."""
         query = self.db.query(Family).filter(Family.id == family_id)
         if not include_inactive:
-            query = query.filter(Family.is_active == True)
+            query = query.filter(Family.is_active == True)  # noqa: E712
         return query.first()
 
     def create_family(
         self,
         name: str,
         family_size: int,
-        api_token_hash: str,
         admin_pin_hash: str,
     ) -> Family:
         """Create new family account."""
@@ -41,33 +35,16 @@ class FamilyRepository(BaseRepository[Family]):
             id=self._generate_uuid(),
             name=name,
             family_size=family_size,
-            api_token_hash=api_token_hash,
             admin_pin_hash=admin_pin_hash,
-            token_created_at=datetime.now(timezone.utc),
             is_active=True,
-            consent_given=False,
-            has_minor_users=False,
-            created_at=datetime.now(timezone.utc),
-            updated_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
+            updated_at=datetime.now(UTC),
         )
         self.db.add(family)
         self.db.flush()
         return family
 
-    def update_token_hash(self, family_id: UUID, new_token_hash: str) -> Optional[Family]:
-        """Update API token hash (for token rotation)."""
-        family = self.get_by_id(family_id)
-        if not family:
-            return None
-
-        family.api_token_hash = new_token_hash
-        family.token_created_at = datetime.now(timezone.utc)
-        family.updated_at = datetime.now(timezone.utc)
-        self.db.add(family)
-        self.db.flush()
-        return family
-
-    def update_pin_attempts(self, family_id: UUID, attempts: int) -> Optional[Family]:
+    def update_pin_attempts(self, family_id: UUID, attempts: int) -> Family | None:
         """Update PIN attempt count."""
         family = self.get_by_id(family_id)
         if not family:
@@ -75,7 +52,7 @@ class FamilyRepository(BaseRepository[Family]):
 
         family.pin_attempts = attempts
         if attempts >= 5:
-            family.pin_locked_until = datetime.now(timezone.utc) + timedelta(minutes=15)
+            family.pin_locked_until = datetime.now(UTC) + timedelta(minutes=15)
         else:
             family.pin_locked_until = None
 
@@ -83,7 +60,7 @@ class FamilyRepository(BaseRepository[Family]):
         self.db.flush()
         return family
 
-    def reset_pin_attempts(self, family_id: UUID) -> Optional[Family]:
+    def reset_pin_attempts(self, family_id: UUID) -> Family | None:
         """Reset PIN attempts after successful verification."""
         family = self.get_by_id(family_id)
         if not family:
@@ -102,7 +79,7 @@ class FamilyRepository(BaseRepository[Family]):
             return False
 
         family.is_active = False
-        family.updated_at = datetime.now(timezone.utc)
+        family.updated_at = datetime.now(UTC)
         self.db.add(family)
         self.db.flush()
         return True
@@ -117,65 +94,19 @@ class FamilyRepository(BaseRepository[Family]):
         self.db.flush()
         return True
 
-    def set_consent(self, family_id: UUID, consent_given: bool) -> Optional[Family]:
-        """Update COPPA consent status."""
-        family = self.get_by_id(family_id)
-        if not family:
-            return None
-
-        family.consent_given = consent_given
-        if consent_given:
-            family.consent_date = datetime.now(timezone.utc)
-        family.updated_at = datetime.now(timezone.utc)
-        self.db.add(family)
-        self.db.flush()
-        return family
-
-    def set_consent_code(
-        self,
-        family_id: UUID,
-        consent_code_hash: str,
-        expires_in_minutes: int = 24 * 60,
-    ) -> Optional[Family]:
-        """Set consent verification code and expiry."""
-        family = self.get_by_id(family_id)
-        if not family:
-            return None
-
-        family.consent_code_hash = consent_code_hash
-        family.consent_code_expires_at = datetime.now(timezone.utc) + timedelta(minutes=expires_in_minutes)
-        self.db.add(family)
-        self.db.flush()
-        return family
-
-    def clear_consent_code(self, family_id: UUID) -> Optional[Family]:
-        """Clear consent code after verification."""
-        family = self.get_by_id(family_id)
-        if not family:
-            return None
-
-        family.consent_code_hash = None
-        family.consent_code_expires_at = None
-        self.db.add(family)
-        self.db.flush()
-        return family
-
-    def has_minor_users(self, family_id: UUID) -> bool:
-        """Check if family has minor users."""
-        family = self.get_by_id(family_id)
-        if not family:
-            return False
-
-        return family.has_minor_users
-
     def _generate_uuid(self):
         """Generate a new UUID."""
         import uuid
+
         return uuid.uuid4()
 
     def get_soft_deleted_before(self, cutoff_date: datetime) -> list[Family]:
         """Get families soft-deleted before cutoff date."""
-        return self.db.query(Family).filter(
-            Family.is_active == False,
-            Family.updated_at <= cutoff_date,
-        ).all()
+        return (
+            self.db.query(Family)
+            .filter(
+                Family.is_active == False,  # noqa: E712
+                Family.updated_at <= cutoff_date,
+            )
+            .all()
+        )

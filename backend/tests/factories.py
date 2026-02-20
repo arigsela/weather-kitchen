@@ -4,6 +4,7 @@ Test data factories for generating test entities.
 
 import uuid
 from datetime import datetime
+
 from sqlalchemy.orm import Session
 
 from app.models.recipe import Recipe, RecipeIngredient, RecipeStep, RecipeTag
@@ -51,7 +52,7 @@ class RecipeFactory:
         for i in range(count):
             recipe = RecipeFactory.create(
                 db,
-                name=f"Test Recipe {i+1}",
+                name=f"Test Recipe {i + 1}",
                 weather=weather,
                 **kwargs,
             )
@@ -114,7 +115,6 @@ class RecipeStepFactory:
         step_text: str = "Test Step",
     ):
         """Create a recipe step."""
-        from app.models.recipe import RecipeStep
         step = RecipeStep(
             id=uuid.uuid4(),
             recipe_id=recipe_id,
@@ -134,7 +134,6 @@ class RecipeStepFactory:
         steps: list[str],
     ) -> list:
         """Create multiple steps for a recipe."""
-        from app.models.recipe import RecipeStep
         created = []
         for idx, step_text in enumerate(steps, 1):
             step = RecipeStepFactory.create(

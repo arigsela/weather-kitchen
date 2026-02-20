@@ -5,20 +5,19 @@ Seed script for loading recipes from JSON into the database.
 import json
 import sys
 import uuid
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from app.models.recipe import Recipe, RecipeIngredient, RecipeStep, RecipeTag
-from app.models.base import DeclarativeBase
 from app.config import settings
+from app.models.recipe import Recipe, RecipeIngredient, RecipeStep, RecipeTag
 
 
 def load_recipes_from_json(json_path: str) -> list[dict]:
     """Load recipe data from JSON file."""
-    with open(json_path, "r") as f:
+    with open(json_path) as f:
         return json.load(f)
 
 
@@ -116,7 +115,7 @@ def main():
 
     # Create database session
     engine = create_engine(settings.database_url)
-    SessionLocal = sessionmaker(bind=engine)
+    SessionLocal = sessionmaker(bind=engine)  # noqa: N806
     db_session = SessionLocal()
 
     try:

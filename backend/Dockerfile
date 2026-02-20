@@ -1,6 +1,6 @@
 # Multi-stage Dockerfile for Weather Kitchen API
 # Stage 1: Builder
-FROM python:3.12-slim as builder
+FROM python:3.12-slim AS builder
 
 WORKDIR /build
 
@@ -25,6 +25,7 @@ RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
     pydantic-settings==2.5.0 \
     email-validator==2.3.0 \
     bcrypt==5.0.0 \
+    PyJWT==2.9.0 \
     gunicorn==23.0.0
 
 # Stage 2: Runtime
@@ -54,7 +55,7 @@ RUN mkdir -p /app/data && chown -R appuser:appuser /app
 # Switch to non-root user
 USER appuser
 
-# Environment variables
+# Environment variables — JWT_SECRET_KEY must be overridden in production
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     DATABASE_URL="sqlite:///./data/weather_kitchen.db" \

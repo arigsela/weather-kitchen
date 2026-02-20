@@ -2,12 +2,12 @@
 Recipe repository - data access layer with optimized queries.
 """
 
-from typing import Optional, List
 from uuid import UUID
-from sqlalchemy.orm import Session, selectinload
-from sqlalchemy import select, func, and_, or_
 
-from app.models.recipe import Recipe, RecipeTag, RecipeIngredient
+from sqlalchemy import and_, func, or_, select
+from sqlalchemy.orm import Session, selectinload
+
+from app.models.recipe import Recipe, RecipeIngredient, RecipeTag
 from app.repositories.base import BaseRepository
 
 
@@ -17,7 +17,7 @@ class RecipeRepository(BaseRepository[Recipe]):
     def __init__(self, db: Session):
         super().__init__(db, Recipe)
 
-    def get_by_id(self, recipe_id: UUID, load_relationships: bool = True) -> Optional[Recipe]:
+    def get_by_id(self, recipe_id: UUID, load_relationships: bool = True) -> Recipe | None:
         """
         Get recipe by ID with optimized loading.
 
@@ -43,13 +43,13 @@ class RecipeRepository(BaseRepository[Recipe]):
 
     def list_recipes(
         self,
-        weather: Optional[str] = None,
-        category: Optional[str] = None,
-        tags: Optional[List[str]] = None,
-        ingredients: Optional[List[str]] = None,
+        weather: str | None = None,
+        category: str | None = None,
+        tags: list[str] | None = None,
+        ingredients: list[str] | None = None,
         limit: int = 20,
         offset: int = 0,
-    ) -> tuple[List[Recipe], int]:
+    ) -> tuple[list[Recipe], int]:
         """
         List recipes with filters and pagination.
 
@@ -113,9 +113,12 @@ class RecipeRepository(BaseRepository[Recipe]):
         total = self.db.execute(count_query).scalar() or 0
 
         # Apply pagination and execute
-        recipes = self.db.execute(
-            query.order_by(Recipe.name).limit(limit).offset(offset)
-        ).scalars().unique().all()
+        recipes = (
+            self.db.execute(query.order_by(Recipe.name).limit(limit).offset(offset))
+            .scalars()
+            .unique()
+            .all()
+        )
 
         return recipes, total
 
@@ -126,15 +129,14 @@ class RecipeRepository(BaseRepository[Recipe]):
         Returns:
             Dict mapping weather type to count
         """
-        query = select(
-            Recipe.weather,
-            func.count(Recipe.id).label("count")
-        ).group_by(Recipe.weather)
+        query = select(Recipe.weather, func.count(Recipe.id).label("count")).group_by(
+            Recipe.weather
+        )
 
         results = self.db.execute(query).all()
         return {weather: count for weather, count in results}
 
-    def get_tag_categories(self) -> dict[str, List[tuple[str, int]]]:
+    def get_tag_categories(self) -> dict[str, list[tuple[str, int]]]:
         """
         Get tags grouped by category with counts.
 
@@ -142,16 +144,11 @@ class RecipeRepository(BaseRepository[Recipe]):
             Dict mapping category to list of (tag, count) tuples
         """
         # Get all tags with their counts grouped by category
-        query = select(
-            Recipe.category,
-            RecipeTag.tag,
-            func.count(Recipe.id).label("count")
-        ).join(
-            RecipeTag, Recipe.id == RecipeTag.recipe_id
-        ).group_by(
-            Recipe.category, RecipeTag.tag
-        ).order_by(
-            Recipe.category, RecipeTag.tag
+        query = (
+            select(Recipe.category, RecipeTag.tag, func.count(Recipe.id).label("count"))
+            .join(RecipeTag, Recipe.id == RecipeTag.recipe_id)
+            .group_by(Recipe.category, RecipeTag.tag)
+            .order_by(Recipe.category, RecipeTag.tag)
         )
 
         results = self.db.execute(query).all()
@@ -165,7 +162,7 @@ class RecipeRepository(BaseRepository[Recipe]):
 
         return categories
 
-    def search_by_name(self, query_text: str, limit: int = 20) -> List[Recipe]:
+    def search_by_name(self, query_text: str, limit: int = 20) -> list[Recipe]:
         """
         Search recipes by name (case-insensitive).
 
@@ -176,17 +173,20 @@ class RecipeRepository(BaseRepository[Recipe]):
         Returns:
             List of matching recipes
         """
-        query = select(Recipe).options(
-            selectinload(Recipe.ingredients),
-            selectinload(Recipe.steps),
-            selectinload(Recipe.tags),
-        ).where(
-            Recipe.name.ilike(f"%{query_text}%")
-        ).limit(limit)
+        query = (
+            select(Recipe)
+            .options(
+                selectinload(Recipe.ingredients),
+                selectinload(Recipe.steps),
+                selectinload(Recipe.tags),
+            )
+            .where(Recipe.name.ilike(f"%{query_text}%"))
+            .limit(limit)
+        )
 
         return self.db.execute(query).scalars().all()
 
-    def get_all_paginated(self, limit: int = 20, offset: int = 0) -> tuple[List[Recipe], int]:
+    def get_all_paginated(self, limit: int = 20, offset: int = 0) -> tuple[list[Recipe], int]:
         """
         Get all recipes with pagination.
 

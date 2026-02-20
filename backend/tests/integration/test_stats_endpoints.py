@@ -2,7 +2,6 @@
 Integration tests for statistics endpoints.
 """
 
-import pytest
 from tests.factories import RecipeFactory, RecipeTagFactory
 
 

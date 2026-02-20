@@ -5,7 +5,7 @@ Implements sliding window rate limiting with different tiers for different endpo
 
 import time
 from collections import defaultdict
-from typing import Dict, List, Tuple
+
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import JSONResponse
@@ -39,7 +39,7 @@ class RateLimiterMiddleware(BaseHTTPMiddleware):
     def __init__(self, app):
         super().__init__(app)
         # Storage: {ip: [(timestamp, endpoint), ...]}
-        self.request_history: Dict[str, List[Tuple[float, str]]] = defaultdict(list)
+        self.request_history: dict[str, list[tuple[float, str]]] = defaultdict(list)
 
     async def dispatch(self, request: Request, call_next):
         """Check rate limit and forward request if allowed."""
@@ -66,10 +66,10 @@ class RateLimiterMiddleware(BaseHTTPMiddleware):
                     "error": {
                         "code": "RATE_LIMIT_EXCEEDED",
                         "message": f"Too many requests. Retry after {retry_after:.0f} seconds.",
-                        "details": []
+                        "details": [],
                     }
                 },
-                headers={"Retry-After": f"{retry_after:.0f}"}
+                headers={"Retry-After": f"{retry_after:.0f}"},
             )
 
         # Record this request
@@ -109,11 +109,12 @@ class RateLimiterMiddleware(BaseHTTPMiddleware):
 
         # Keep only requests within the current window
         self.request_history[client_ip] = [
-            (timestamp, path) for timestamp, path in self.request_history[client_ip]
+            (timestamp, path)
+            for timestamp, path in self.request_history[client_ip]
             if current_time - timestamp <= window
         ]
 
-    def _check_general_limit(self, client_ip: str, current_time: float) -> Tuple[bool, float]:
+    def _check_general_limit(self, client_ip: str, current_time: float) -> tuple[bool, float]:
         """Check general tier rate limit (10 req/sec)."""
         if client_ip not in self.request_history:
             return True, 0
@@ -128,7 +129,7 @@ class RateLimiterMiddleware(BaseHTTPMiddleware):
 
         return True, 0
 
-    def _check_pin_limit(self, client_ip: str, current_time: float) -> Tuple[bool, float]:
+    def _check_pin_limit(self, client_ip: str, current_time: float) -> tuple[bool, float]:
         """Check PIN tier rate limit (5 req/15min)."""
         if client_ip not in self.request_history:
             return True, 0

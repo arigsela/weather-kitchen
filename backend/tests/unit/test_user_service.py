@@ -2,12 +2,9 @@
 Unit tests for UserService - CRUD, ingredient management, favorites.
 """
 
-from uuid import uuid4
-import pytest
 from sqlalchemy.orm import Session
 
 from app.services.user_service import UserService
-from app.models.user import UserIngredient, UserFavorite
 
 
 def test_create_user_in_family(test_db: Session, family_factory):
@@ -17,14 +14,13 @@ def test_create_user_in_family(test_db: Session, family_factory):
 
     response = service.create_user(
         family_id=family.id,
-        name="Child User",
-        age=10,
+        name="Test User",
+        emoji="👤",
     )
 
     assert response.id is not None
     assert response.family_id == family.id
-    assert response.name == "Child User"
-    assert response.age == 10
+    assert response.name == "Test User"
 
 
 def test_get_user_by_id(test_db: Session, family_factory, user_factory):
@@ -53,8 +49,8 @@ def test_get_user_wrong_family_returns_none(test_db: Session, family_factory, us
 def test_list_users_in_family(test_db: Session, family_factory, user_factory):
     """Test listing users in a family."""
     family, token = family_factory(test_db)
-    user1 = user_factory(test_db, family_id=family.id, name="Alice")
-    user2 = user_factory(test_db, family_id=family.id, name="Bob")
+    user1 = user_factory(test_db, family_id=family.id, name="Alice")  # noqa: F841
+    user2 = user_factory(test_db, family_id=family.id, name="Bob")  # noqa: F841
     service = UserService(test_db)
 
     response = service.list_users(family.id)
@@ -77,22 +73,6 @@ def test_update_user_name(test_db: Session, family_factory, user_factory):
 
     assert response is not None
     assert response.name == "Updated Name"
-
-
-def test_update_user_age(test_db: Session, family_factory, user_factory):
-    """Test updating user age."""
-    family, token = family_factory(test_db)
-    user = user_factory(test_db, family_id=family.id, age=10)
-    service = UserService(test_db)
-
-    response = service.update_user(
-        user_id=user.id,
-        family_id=family.id,
-        age=12,
-    )
-
-    assert response is not None
-    assert response.age == 12
 
 
 def test_get_empty_ingredients(test_db: Session, family_factory, user_factory):

@@ -1,16 +1,19 @@
 """
-FastAPI dependency injection for authentication and authorization.
+FastAPI dependency injection for JWT authentication and authorization.
 """
 
-import hashlib
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from uuid import UUID
+
+import jwt
 from fastapi import Depends, Header, HTTPException, status
 from sqlalchemy.orm import Session
 
+from app.auth.jwt import decode_token
+from app.auth.pin import check_lockout
+from app.auth.pin import verify_pin as verify_pin_hash
 from app.database import get_db
 from app.models.family import Family
-from app.auth.pin import verify_pin as verify_pin_hash, check_lockout
 
 
 def get_token_from_header(authorization: str | None) -> str:
@@ -21,7 +24,6 @@ def get_token_from_header(authorization: str | None) -> str:
             detail="Missing Authorization header",
             headers={"WWW-Authenticate": "Bearer"},
         )
-
     parts = authorization.split()
     if len(parts) != 2 or parts[0].lower() != "bearer":
         raise HTTPException(
@@ -29,13 +31,7 @@ def get_token_from_header(authorization: str | None) -> str:
             detail="Invalid Authorization header format (expected: Bearer <token>)",
             headers={"WWW-Authenticate": "Bearer"},
         )
-
     return parts[1]
-
-
-def hash_token(token: str) -> str:
-    """Hash token for database lookup."""
-    return hashlib.sha256(token.encode()).hexdigest()
 
 
 async def get_current_family(
@@ -43,30 +39,56 @@ async def get_current_family(
     db: Session = Depends(get_db),
 ) -> Family:
     """
-    Verify Bearer token and return the authenticated family.
+    Decode JWT access token and return the authenticated family.
 
-    Args:
-        authorization: Authorization header
-        db: Database session
-
-    Returns:
-        Family object
-
-    Raises:
-        HTTPException 401 if token missing or invalid
-        HTTPException 404 if family not found (prevents enumeration)
+    Raises 401 on missing/invalid/expired token.
     """
     token = get_token_from_header(authorization)
-    token_hash = hash_token(token)
 
-    # Look up family by token hash
-    family = db.query(Family).filter(Family.api_token_hash == token_hash).first()
-
-    if not family or not family.is_active:
-        # Return 404 instead of 401 to prevent token enumeration
+    try:
+        payload = decode_token(token)
+    except jwt.ExpiredSignatureError:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token has expired",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    except jwt.InvalidTokenError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    if payload.get("type") != "access":
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token type",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    family_id = payload.get("sub")
+    if not family_id:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token claims",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    family = (
+        db.query(Family)
+        .filter(
+            Family.id == family_id,
+            Family.is_active == True,  # noqa: E712
+        )
+        .first()
+    )
+
+    if not family:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Family not found or inactive",
+            headers={"WWW-Authenticate": "Bearer"},
         )
 
     return family
@@ -77,25 +99,14 @@ async def require_family_owner(
     current_family: Family = Depends(get_current_family),
 ) -> Family:
     """
-    Verify that the authenticated family ID matches the requested family ID.
-
-    Args:
-        family_id: Family ID from URL path
-        current_family: Currently authenticated family
-
-    Returns:
-        Family object if owner matches
-
-    Raises:
-        HTTPException 404 if family IDs don't match (prevents enumeration)
+    Verify the authenticated family ID matches the URL family_id.
+    Returns 404 (not 403) to prevent family enumeration.
     """
     if current_family.id != family_id:
-        # Return 404 instead of 403 to prevent family enumeration
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Family not found or access denied",
         )
-
     return current_family
 
 
@@ -106,56 +117,34 @@ async def require_pin(
 ) -> Family:
     """
     Verify PIN and check lockout status.
-
-    Args:
-        pin: PIN to verify
-        family: Currently authenticated family
-        db: Database session
-
-    Returns:
-        Family object if PIN is correct
-
-    Raises:
-        HTTPException 423 if family is locked out
-        HTTPException 403 if PIN is incorrect
+    Raises 423 if locked out, 403 if PIN incorrect.
     """
-    # Check lockout status
-    is_locked, lockout_expires_at = check_lockout(
-        family.pin_attempts,
-        family.pin_locked_until,
-    )
-
+    is_locked, seconds_remaining = check_lockout(family.pin_locked_until)
     if is_locked:
+        minutes_remaining = max(1, seconds_remaining // 60)
         raise HTTPException(
             status_code=status.HTTP_423_LOCKED,
-            detail=f"Too many failed attempts. Try again after {lockout_expires_at}",
+            detail=f"Too many failed attempts. Try again in {minutes_remaining} minute(s).",
         )
 
-    # Verify PIN
     pin_correct = verify_pin_hash(pin, family.admin_pin_hash)
 
     if not pin_correct:
-        # Increment failed attempts
         family.pin_attempts += 1
-
-        # Check if we should lock out
-        if family.pin_attempts >= 5:  # PIN_MAX_ATTEMPTS from config
+        if family.pin_attempts >= 5:
             from datetime import timedelta
-            family.pin_locked_until = datetime.now(timezone.utc) + timedelta(minutes=15)
 
+            family.pin_locked_until = datetime.now(UTC) + timedelta(minutes=15)
         db.add(family)
         db.flush()
-
         remaining = max(0, 5 - family.pin_attempts)
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail=f"Invalid PIN ({remaining} attempts remaining)",
         )
 
-    # PIN correct - reset attempts
     family.pin_attempts = 0
     family.pin_locked_until = None
     db.add(family)
     db.flush()
-
     return family
