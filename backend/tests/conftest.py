@@ -13,7 +13,7 @@ from sqlalchemy.pool import StaticPool
 
 from app.database import get_db
 from app.main import create_app
-from app.models.base import DeclarativeBase
+from app.models import DeclarativeBase  # imports all models, ensuring all tables are registered
 from app.models.family import Family
 from app.models.recipe import Recipe
 from app.models.user import User
@@ -41,13 +41,24 @@ def test_db():
 @pytest.fixture(scope="function")
 def test_client(test_db):
     """Create a test client with overridden database dependency."""
+    import app.services.audit_service as audit_mod
+
     app = create_app()
 
     def override_get_db():
         yield test_db
 
     app.dependency_overrides[get_db] = override_get_db
-    return TestClient(app)
+
+    # Override the session factory used by background audit tasks so they
+    # write to the same in-memory test DB instead of the production engine.
+    original_factory = audit_mod._session_factory
+    test_session_local = sessionmaker(autocommit=False, autoflush=False, bind=test_db.get_bind())
+    audit_mod._session_factory = test_session_local
+
+    yield TestClient(app)
+
+    audit_mod._session_factory = original_factory
 
 
 @pytest.fixture
