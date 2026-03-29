@@ -56,3 +56,6 @@ dist/
 # Logs
 *.log
 logs/
+
+# Playwright MCP logs
+.playwright-mcp/
