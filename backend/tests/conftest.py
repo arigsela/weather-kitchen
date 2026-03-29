@@ -41,13 +41,24 @@ def test_db():
 @pytest.fixture(scope="function")
 def test_client(test_db):
     """Create a test client with overridden database dependency."""
+    import app.services.audit_service as audit_mod
+
     app = create_app()
 
     def override_get_db():
         yield test_db
 
     app.dependency_overrides[get_db] = override_get_db
-    return TestClient(app)
+
+    # Override the session factory used by background audit tasks so they
+    # write to the same in-memory test DB instead of the production engine.
+    original_factory = audit_mod._session_factory
+    test_session_local = sessionmaker(autocommit=False, autoflush=False, bind=test_db.get_bind())
+    audit_mod._session_factory = test_session_local
+
+    yield TestClient(app)
+
+    audit_mod._session_factory = original_factory
 
 
 @pytest.fixture

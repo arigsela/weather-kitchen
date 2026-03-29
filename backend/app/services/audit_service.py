@@ -13,6 +13,10 @@ from sqlalchemy.orm import Session
 from app.database import SessionLocal
 from app.models.audit import AuditLog
 
+# Overridable session factory for background audit tasks.
+# Tests replace this to route audit writes to the in-memory test DB.
+_session_factory = SessionLocal
+
 
 class AuditService:
     """Service layer for audit log operations."""
@@ -176,7 +180,7 @@ def _audit_log_background(
         user_agent: HTTP User-Agent header value (optional)
         details: Pre-serialised JSON string (optional)
     """
-    db = SessionLocal()
+    db = _session_factory()
     try:
         AuditService(db).log_action(
             family_id=family_id,

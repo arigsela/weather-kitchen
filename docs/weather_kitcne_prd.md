@@ -10,10 +10,10 @@
 ## 1. VISION & OBJECTIVES
 
 ### 1.1 Vision Statement
-A delightful, secure, and scalable recipe discovery app that suggests weather-appropriate meals to families. Designed for children aged 6-12 with parental oversight, featuring ingredient-based recipe matching and personalized favorites.
+A delightful, secure, and scalable recipe discovery app that suggests weather-appropriate meals to families and individuals. Features ingredient-based recipe matching, personalized favorites, and multi-user support for collaborative meal planning.
 
 ### 1.2 Core Objectives
-1. **Security**: OWASP Top 10 compliant, COPPA/GDPR compliant for children's data
+1. **Security**: OWASP Top 10 compliant, JWT authentication, rate limiting, input validation
 2. **Performance**: Sub-200ms API responses, 90%+ payload compression, < 10 database queries per request
 3. **Reliability**: 99.9% uptime, comprehensive error handling, full audit logging
 4. **Maintainability**: Clean architecture, >80% test coverage, complete documentation
@@ -56,25 +56,25 @@ A delightful, secure, and scalable recipe discovery app that suggests weather-ap
 
 ### 3.1 User Personas
 
-#### 3.1.1 Primary: Eleanor (Age 9, Child User)
-- Wants to discover fun recipes based on weather
-- Needs simple UI with large buttons
-- Interested in recipes with fun emoji and playful tips
-- Tracks "favorite" recipes
-- Selects ingredients available in pantry
+#### 3.1.1 Primary: Recipe Discoverer
+- Wants to find recipes matching current weather conditions
+- Needs quick filtering by available ingredients
+- Values recipe variety and discovery
+- Tracks favorite recipes for quick access
+- Uses app for meal planning
 
-#### 3.1.2 Secondary: Parent/Guardian
-- Wants to monitor data collection
-- Needs privacy assurance
-- Wants ability to delete family data
-- May manage multiple children
-- Requires parental consent mechanism
+#### 3.1.2 Secondary: Family Meal Planner
+- Manages recipes and ingredients for household
+- Needs multi-user support for family members
+- Wants to adjust recipes based on serving size
+- Values organization and ingredient tracking
+- Creates and shares meal plans
 
-#### 3.1.3 Tertiary: Family Admin (Parent Creating Family)
+#### 3.1.3 Tertiary: Family Admin
 - Sets up family account
 - Manages family-level settings
-- Controls data visibility
-- Can reset app or delete family
+- Controls account data
+- Can export or delete family data
 
 ### 3.2 Core Features
 
