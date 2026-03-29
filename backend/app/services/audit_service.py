@@ -192,5 +192,10 @@ def _audit_log_background(
             user_id=user_id,
             details=details,
         )
+    except Exception:
+        # Audit failures must never crash the request or its background tasks.
+        # Errors are intentionally swallowed here; the request has already
+        # completed successfully from the client's perspective.
+        db.rollback()
     finally:
         db.close()
