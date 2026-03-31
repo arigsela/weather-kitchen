@@ -130,7 +130,7 @@ def test_update_family_requires_auth(test_client: TestClient, family_factory, te
 
     response = test_client.put(
         f"/api/v1/families/{family.id}",
-        json={"name": "New Name"},
+        json={"name": "new_name"},
     )
     assert response.status_code == 401
 
@@ -149,7 +149,7 @@ def test_hard_delete_family_requires_auth(test_client: TestClient, family_factor
 
     response = test_client.post(
         f"/api/v1/families/{family.id}/purge",
-        json={"admin_pin": "1234"},
+        json={"password": "TestPass1"},
     )
     assert response.status_code == 401
 
@@ -160,18 +160,18 @@ def test_rotate_token_requires_auth(test_client: TestClient, family_factory, tes
 
     response = test_client.post(
         f"/api/v1/families/{family.id}/token/rotate",
-        json={"admin_pin": "1234"},
+        json={"password": "TestPass1"},
     )
     assert response.status_code == 401
 
 
-def test_verify_pin_requires_auth(test_client: TestClient, family_factory, test_db):
-    """Test that verifying PIN requires authentication."""
+def test_verify_password_requires_auth(test_client: TestClient, family_factory, test_db):
+    """Test that verifying password requires authentication."""
     family, token = family_factory(test_db)
 
     response = test_client.post(
-        f"/api/v1/families/{family.id}/verify-pin",
-        json={"admin_pin": "1234"},
+        f"/api/v1/families/{family.id}/verify-password",
+        json={"password": "TestPass1"},
     )
     assert response.status_code == 401
 
@@ -186,12 +186,12 @@ def test_export_family_requires_auth(test_client: TestClient, family_factory, te
 
 def test_rotated_new_token_works(test_client: TestClient, family_factory, test_db):
     """After JWT rotation, the new access token should grant access."""
-    family, old_token = family_factory(test_db, admin_pin="1234")
+    family, old_token = family_factory(test_db, password="TestPass1")
 
     # Rotate tokens
     response = test_client.post(
         f"/api/v1/families/{family.id}/token/rotate",
-        json={"admin_pin": "1234"},
+        json={"password": "TestPass1"},
         headers={"Authorization": f"Bearer {old_token}"},
     )
     assert response.status_code == 200

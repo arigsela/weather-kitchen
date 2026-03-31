@@ -1,8 +1,9 @@
 """
-Authentication module for JWT tokens and PINs.
+Authentication module for JWT tokens, passwords, and PINs.
 """
 
 from app.auth.jwt import create_access_token, create_refresh_token, decode_token, hash_refresh_token
+from app.auth.password import hash_password, validate_password_strength, verify_password
 from app.auth.pin import (
     check_lockout,
     get_lockout_until,
@@ -16,6 +17,9 @@ __all__ = [
     "create_refresh_token",
     "decode_token",
     "hash_refresh_token",
+    "hash_password",
+    "verify_password",
+    "validate_password_strength",
     "hash_pin",
     "verify_pin",
     "check_lockout",

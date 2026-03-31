@@ -72,7 +72,7 @@ def test_very_long_token_returns_401(test_client: TestClient, family_factory, te
 def test_token_with_unicode_characters_rejected(test_client: TestClient, family_factory, test_db):
     """Test that a token containing unicode characters is rejected at the HTTP transport layer."""
     family, token = family_factory(test_db)
-    unicode_token = "токен-безопасности-юникод"
+    unicode_token = "\u0442\u043e\u043a\u0435\u043d-\u0431\u0435\u0437\u043e\u043f\u0430\u0441\u043d\u043e\u0441\u0442\u0438-\u044e\u043d\u0438\u043a\u043e\u0434"
 
     # HTTP headers are ASCII-only (RFC 7230) — httpx correctly rejects non-ASCII values
     with pytest.raises(UnicodeEncodeError):
@@ -110,12 +110,12 @@ def test_rotation_new_refresh_token_cannot_reuse_old(
     test_client: TestClient, family_factory, test_db
 ):
     """After JWT rotation, the old refresh token is revoked and cannot generate a new access token."""
-    family, old_token = family_factory(test_db, admin_pin="1234")
+    family, old_token = family_factory(test_db, password="TestPass1")
 
     # Get the initial refresh token by creating the family via API
     create_response = test_client.post(
         "/api/v1/families",
-        json={"name": "Rotate Test", "family_size": 2, "admin_pin": "5678"},
+        json={"name": "rotate_test", "family_size": 2, "password": "TestPass2"},
     )
     assert create_response.status_code == 201
     old_refresh = create_response.json()["refresh_token"]
@@ -125,7 +125,7 @@ def test_rotation_new_refresh_token_cannot_reuse_old(
     # Rotate — revokes old refresh token
     rotate_response = test_client.post(
         f"/api/v1/families/{fid}/token/rotate",
-        json={"admin_pin": "5678"},
+        json={"password": "TestPass2"},
         headers={"Authorization": f"Bearer {access}"},
     )
     assert rotate_response.status_code == 200
@@ -187,11 +187,11 @@ def test_token_with_newline_injection_returns_401(test_client: TestClient, famil
 
 def test_rotated_token_new_token_still_works(test_client: TestClient, family_factory, test_db):
     """After rotation the new access token grants access."""
-    family, old_token = family_factory(test_db, admin_pin="5678")
+    family, old_token = family_factory(test_db, password="TestPass2")
 
     rotate_response = test_client.post(
         f"/api/v1/families/{family.id}/token/rotate",
-        json={"admin_pin": "5678"},
+        json={"password": "TestPass2"},
         headers={"Authorization": f"Bearer {old_token}"},
     )
     assert rotate_response.status_code == 200

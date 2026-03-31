@@ -73,39 +73,41 @@ def test_rate_limit_recovers_after_window(test_client: TestClient, family_factor
 
 
 # ---------------------------------------------------------------------------
-# PIN endpoint rate limiting (5 req / 15 min per IP)
+# Password endpoint rate limiting (5 req / 15 min per IP)
 # ---------------------------------------------------------------------------
 
 
-def test_rapid_pin_verify_requests_trigger_429(test_client: TestClient, family_factory, test_db):
-    """Test that sending 10 rapid POST requests to verify-pin causes at least one 429 response."""
-    family, token = family_factory(test_db, admin_pin="1234")
+def test_rapid_password_verify_requests_trigger_429(
+    test_client: TestClient, family_factory, test_db
+):
+    """Test that sending 10 rapid POST requests to verify-password causes at least one 429 response."""
+    family, token = family_factory(test_db, password="TestPass1")
     headers = {"Authorization": f"Bearer {token}"}
 
     status_codes = []
     for _ in range(10):
         response = test_client.post(
-            f"/api/v1/families/{family.id}/verify-pin",
-            json={"admin_pin": "1234"},
+            f"/api/v1/families/{family.id}/verify-password",
+            json={"password": "TestPass1"},
             headers=headers,
         )
         status_codes.append(response.status_code)
 
     assert 429 in status_codes, (
-        f"Expected at least one 429 among 10 rapid PIN verify requests, "
+        f"Expected at least one 429 among 10 rapid password verify requests, "
         f"got status codes: {status_codes}"
     )
 
 
 def test_rapid_token_rotate_requests_trigger_429(test_client: TestClient, family_factory, test_db):
     """Test that sending rapid POST requests to token/rotate causes at least one 429 response."""
-    family, token = family_factory(test_db, admin_pin="1234")
+    family, token = family_factory(test_db, password="TestPass1")
     status_codes = []
 
     for _ in range(10):
         response = test_client.post(
             f"/api/v1/families/{family.id}/token/rotate",
-            json={"admin_pin": "1234"},
+            json={"password": "TestPass1"},
             headers={"Authorization": f"Bearer {token}"},
         )
         status_codes.append(response.status_code)
@@ -118,23 +120,23 @@ def test_rapid_token_rotate_requests_trigger_429(test_client: TestClient, family
     )
 
 
-def test_pin_endpoint_429_includes_retry_after_header(
+def test_password_endpoint_429_includes_retry_after_header(
     test_client: TestClient, family_factory, test_db
 ):
-    """Test that a 429 from a PIN endpoint includes a Retry-After header."""
-    family, token = family_factory(test_db, admin_pin="1234")
+    """Test that a 429 from a password endpoint includes a Retry-After header."""
+    family, token = family_factory(test_db, password="TestPass1")
     headers = {"Authorization": f"Bearer {token}"}
 
     for _ in range(10):
         response = test_client.post(
-            f"/api/v1/families/{family.id}/verify-pin",
-            json={"admin_pin": "1234"},
+            f"/api/v1/families/{family.id}/verify-password",
+            json={"password": "TestPass1"},
             headers=headers,
         )
         if response.status_code == 429:
             assert "retry-after" in response.headers or "Retry-After" in response.headers, (
-                f"PIN 429 response missing Retry-After header. Headers: {dict(response.headers)}"
+                f"Password 429 response missing Retry-After header. Headers: {dict(response.headers)}"
             )
             return
 
-    assert False, "PIN rate limiter never returned 429 within 10 rapid requests."
+    assert False, "Password rate limiter never returned 429 within 10 rapid requests."

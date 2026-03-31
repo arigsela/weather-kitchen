@@ -77,9 +77,9 @@ def family_factory(test_db):
 
     def _create_family(
         db: Session = None,
-        name: str = "Test Family",
+        name: str = "test_family",
         family_size: int = 4,
-        admin_pin: str = "1234",
+        password: str = "TestPass1",
         is_active: bool = True,
     ) -> tuple[Family, str]:
         """Create a family using FamilyService. Returns (family, plaintext_token)."""
@@ -93,7 +93,7 @@ def family_factory(test_db):
         response, access_token, refresh_token = service.create_family(
             name=name,
             family_size=family_size,
-            admin_pin=admin_pin,
+            password=password,
         )
 
         # Retrieve the created family object

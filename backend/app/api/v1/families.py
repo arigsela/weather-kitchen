@@ -14,8 +14,8 @@ from app.database import get_db
 from app.middleware.request_id import get_request_id
 from app.models.family import Family
 from app.schemas.auth import (
-    PinVerifyRequest,
-    PinVerifyResponse,
+    PasswordVerifyRequest,
+    PasswordVerifyResponse,
     SuccessResponse,
     TokenRotateRequest,
     TokenRotateResponse,
@@ -38,7 +38,7 @@ router = APIRouter(prefix="/api/v1", tags=["families"])
     response_model=FamilyCreateResponse,
     status_code=status.HTTP_201_CREATED,
     summary="Create family account",
-    description="Create new family with admin PIN. Returns one-time plaintext API token.",
+    description="Create new family with password. Returns JWT tokens.",
 )
 async def create_family(
     request: FamilyCreate,
@@ -52,7 +52,7 @@ async def create_family(
     family_response, access_token, refresh_token = service.create_family(
         name=request.name,
         family_size=request.family_size,
-        admin_pin=request.admin_pin,
+        password=request.password,
     )
 
     background_tasks.add_task(
@@ -158,22 +158,22 @@ async def soft_delete_family(
     "/families/{family_id}/purge",
     response_model=SuccessResponse,
     summary="Hard delete family",
-    description="Permanently delete family account (requires authentication + PIN)",
+    description="Permanently delete family account (requires authentication + password)",
 )
 async def hard_delete_family(
     family_id: UUID,
-    request: PinVerifyRequest,
+    request: PasswordVerifyRequest,
     background_tasks: BackgroundTasks,
     http_request: Request,
     family: Family = Depends(require_family_owner),
     db: Session = Depends(get_db),
     request_id: str = Depends(get_request_id),
 ) -> SuccessResponse:
-    """Hard delete family (permanent deletion after PIN verification)."""
-    # Verify PIN
-    verified, _ = FamilyService(db).verify_pin(family_id, request.admin_pin)
-    if not verified:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid PIN")
+    """Hard delete family (permanent deletion after password verification)."""
+    from app.auth.password import verify_password
+
+    if not family.password_hash or not verify_password(request.password, family.password_hash):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid password")
 
     # Log before deleting so the family_id FK still resolves in the background session.
     # AuditLog has ON DELETE CASCADE so the entry will be removed with the family, but
@@ -236,7 +236,7 @@ async def export_family(
     "/families/{family_id}/token/rotate",
     response_model=TokenRotateResponse,
     summary="Rotate API token",
-    description="Generate new API token and invalidate old (requires authentication + PIN)",
+    description="Generate new API token and invalidate old (requires authentication + password)",
 )
 async def rotate_token(
     family_id: UUID,
@@ -247,12 +247,13 @@ async def rotate_token(
     db: Session = Depends(get_db),
     request_id: str = Depends(get_request_id),
 ) -> TokenRotateResponse:
-    """Rotate API token after PIN verification."""
-    # Verify PIN
+    """Rotate API token after password verification."""
+    from app.auth.password import verify_password
+
+    if not family.password_hash or not verify_password(request.password, family.password_hash):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid password")
+
     service = FamilyService(db)
-    verified, _ = service.verify_pin(family_id, request.admin_pin)
-    if not verified:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid PIN")
 
     access_token, refresh_token = service.rotate_tokens(family_id)
 
@@ -276,44 +277,44 @@ async def rotate_token(
 
 
 @router.post(
-    "/families/{family_id}/verify-pin",
-    response_model=PinVerifyResponse,
-    summary="Verify PIN",
-    description="Verify admin PIN (requires authentication)",
+    "/families/{family_id}/verify-password",
+    response_model=PasswordVerifyResponse,
+    summary="Verify password",
+    description="Verify family password (requires authentication)",
 )
-async def verify_pin(
+async def verify_password_endpoint(
     family_id: UUID,
-    request: PinVerifyRequest,
+    request: PasswordVerifyRequest,
     background_tasks: BackgroundTasks,
     http_request: Request,
     family: Family = Depends(require_family_owner),
     db: Session = Depends(get_db),
     request_id: str = Depends(get_request_id),
-) -> PinVerifyResponse:
-    """Verify admin PIN."""
-    service = FamilyService(db)
-    success, message = service.verify_pin(family_id, request.admin_pin)
+) -> PasswordVerifyResponse:
+    """Verify family password."""
+    from app.auth.password import verify_password
+
+    success = bool(family.password_hash and verify_password(request.password, family.password_hash))
 
     if success:
         background_tasks.add_task(
             _audit_log_background,
-            action="pin.verified",
+            action="password.verified",
             entity_type="auth",
             entity_id=family_id,
             ip=http_request.client.host,
             family_id=family_id,
             user_agent=http_request.headers.get("user-agent"),
         )
-        return PinVerifyResponse(success=True, message="PIN verified successfully")
+        return PasswordVerifyResponse(success=True, message="Password verified")
     else:
         background_tasks.add_task(
             _audit_log_background,
-            action="pin.failed",
+            action="password.failed",
             entity_type="auth",
             entity_id=family_id,
             ip=http_request.client.host,
             family_id=family_id,
             user_agent=http_request.headers.get("user-agent"),
-            details=json.dumps({"reason": message}),
         )
-        return PinVerifyResponse(success=False, message=message or "Invalid PIN")
+        return PasswordVerifyResponse(success=False, message="Invalid password")

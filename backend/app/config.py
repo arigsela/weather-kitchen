@@ -49,6 +49,12 @@ class Settings(BaseSettings):
     pin_lockout_minutes: int = 15
     bcrypt_rounds: int = 12
 
+    # Password settings
+    password_min_length: int = 8
+    password_max_length: int = 128
+    password_max_attempts: int = 5
+    password_lockout_minutes: int = 15
+
     # JWT Settings — JWT_SECRET_KEY must be set in production via environment variable
     jwt_secret_key: str = _DEV_JWT_SECRET
     jwt_algorithm: str = "HS256"

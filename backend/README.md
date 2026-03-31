@@ -33,17 +33,20 @@ Weather Kitchen uses **JWT Bearer token authentication**.
 
 ### 1. Create a family (get tokens)
 
+Username must be 3–30 characters — letters, numbers, underscores, and hyphens only (no spaces).
+Password must be at least 8 characters and include uppercase, lowercase, and a number.
+
 ```bash
 curl -X POST http://localhost:8000/api/v1/families \
   -H "Content-Type: application/json" \
-  -d '{"name": "Smith Family", "family_size": 4, "admin_pin": "1234"}'
+  -d '{"name": "smith_family", "family_size": 4, "password": "Secret123"}'
 ```
 
 Response:
 ```json
 {
   "id": "550e8400-e29b-41d4-a716-446655440000",
-  "name": "Smith Family",
+  "name": "smith_family",
   "family_size": 4,
   "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
   "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
@@ -53,6 +56,16 @@ Response:
 ```
 
 > **Save the `refresh_token` securely** — it is used to obtain new access tokens.
+
+### Login (returning families)
+
+```bash
+curl -X POST http://localhost:8000/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"name": "smith_family", "password": "Secret123"}'
+```
+
+Returns the same token structure as family creation.
 
 ### 2. Use the access token
 
@@ -79,15 +92,15 @@ curl -X POST http://localhost:8000/api/v1/auth/logout \
   -d '{"refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."}'
 ```
 
-### 5. Rotate all tokens (PIN-protected)
+### 5. Rotate all tokens (password-protected)
 
-Revokes all existing refresh tokens and issues a new pair. Requires admin PIN.
+Revokes all existing refresh tokens and issues a new pair. Requires the family password.
 
 ```bash
 curl -X POST http://localhost:8000/api/v1/families/{id}/token/rotate \
   -H "Authorization: Bearer <access_token>" \
   -H "Content-Type: application/json" \
-  -d '{"admin_pin": "1234"}'
+  -d '{"password": "Secret123"}'
 ```
 
 ---
@@ -105,14 +118,14 @@ curl -X POST http://localhost:8000/api/v1/families/{id}/token/rotate \
 
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
-| `POST` | `/api/v1/families` | None | Create family, returns JWT pair |
+| `POST` | `/api/v1/families` | None | Create family (username + password), returns JWT pair |
+| `POST` | `/api/v1/auth/login` | None | Login with username + password, returns JWT pair |
 | `GET` | `/api/v1/families/{id}` | Bearer | Get family details |
 | `PUT` | `/api/v1/families/{id}` | Bearer | Update family |
 | `DELETE` | `/api/v1/families/{id}` | Bearer | Soft delete family |
-| `POST` | `/api/v1/families/{id}/purge` | Bearer + PIN | Hard delete family |
+| `POST` | `/api/v1/families/{id}/purge` | Bearer + password | Hard delete family |
 | `GET` | `/api/v1/families/{id}/export` | Bearer | GDPR data export |
-| `POST` | `/api/v1/families/{id}/token/rotate` | Bearer + PIN | Revoke all tokens, issue new pair |
-| `POST` | `/api/v1/families/{id}/verify-pin` | Bearer | Verify admin PIN |
+| `POST` | `/api/v1/families/{id}/token/rotate` | Bearer + password | Revoke all tokens, issue new pair |
 | `POST` | `/api/v1/auth/refresh` | None | Refresh access token |
 | `POST` | `/api/v1/auth/logout` | None | Revoke refresh token |
 | `GET` | `/api/v1/recipes` | None | List/filter recipes |
@@ -142,7 +155,7 @@ curl -X POST http://localhost:8000/api/v1/families/{id}/token/rotate \
 | `ENVIRONMENT` | No | `development` | `development` / `staging` / `production` |
 | `DEBUG` | No | `false` | Enable debug mode and auto-reload |
 | `LOG_LEVEL` | No | `INFO` | `DEBUG` / `INFO` / `WARNING` / `ERROR` |
-| `BCRYPT_ROUNDS` | No | `12` | bcrypt cost factor for PIN hashing |
+| `BCRYPT_ROUNDS` | No | `12` | bcrypt cost factor for password hashing |
 | `RATE_LIMIT_ENABLED` | No | `true` | Enable/disable rate limiting |
 | `CORS_ORIGINS` | No | localhost ports | JSON array of allowed origins |
 
