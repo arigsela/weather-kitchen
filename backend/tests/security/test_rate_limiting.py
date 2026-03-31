@@ -77,7 +77,9 @@ def test_rate_limit_recovers_after_window(test_client: TestClient, family_factor
 # ---------------------------------------------------------------------------
 
 
-def test_rapid_password_verify_requests_trigger_429(test_client: TestClient, family_factory, test_db):
+def test_rapid_password_verify_requests_trigger_429(
+    test_client: TestClient, family_factory, test_db
+):
     """Test that sending 10 rapid POST requests to verify-password causes at least one 429 response."""
     family, token = family_factory(test_db, password="TestPass1")
     headers = {"Authorization": f"Bearer {token}"}

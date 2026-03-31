@@ -35,7 +35,9 @@ def test_wrong_password_returns_success_false(test_client: TestClient, family_fa
     assert data["success"] is False
 
 
-def test_four_failures_then_correct_password_succeeds(test_client: TestClient, family_factory, test_db):
+def test_four_failures_then_correct_password_succeeds(
+    test_client: TestClient, family_factory, test_db
+):
     """Test that 4 wrong password attempts followed by the correct password resets counter and returns success=true."""
     family, token = family_factory(test_db, password="TestPass1")
     headers = {"Authorization": f"Bearer {token}"}
@@ -112,10 +114,12 @@ def test_locked_family_returns_lockout_or_rate_limit(
         assert len(data["message"]) > 0
 
 
-def test_password_lockout_does_not_affect_other_family(test_client: TestClient, family_factory, test_db):
+def test_password_lockout_does_not_affect_other_family(
+    test_client: TestClient, family_factory, test_db
+):
     """Test that password brute-force protection for one family does not prevent another family from verifying."""
-    family1, token1 = family_factory(test_db, name="Locked Family", password="TestPass1")
-    family2, token2 = family_factory(test_db, name="Healthy Family", password="TestPass2")
+    family1, token1 = family_factory(test_db, name="locked_family", password="TestPass1")
+    family2, token2 = family_factory(test_db, name="healthy_family", password="TestPass2")
 
     headers1 = {"Authorization": f"Bearer {token1}"}
     headers2 = {"Authorization": f"Bearer {token2}"}
