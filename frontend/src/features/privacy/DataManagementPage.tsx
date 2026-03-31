@@ -63,8 +63,8 @@ export default function DataManagementPage() {
             <div className="flex-1">
               <h2 className="text-lg font-semibold text-text">Export My Data</h2>
               <p className="mt-1 text-sm text-text-muted">
-                Download all your family data as a JSON file. This includes your family info,
-                users, ingredients, and favorites.
+                Download all your family data as a JSON file. This includes your family info, users,
+                ingredients, and favorites.
               </p>
               <Button
                 variant="secondary"

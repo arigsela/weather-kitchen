@@ -9,7 +9,21 @@ import { Eye, EyeOff } from "lucide-react";
 
 type Step = "family" | "user";
 
-const EMOJI_OPTIONS = ["😊", "😎", "🤩", "🥳", "😋", "🧒", "👦", "👧", "👨", "👩", "👴", "👵", "🐱"];
+const EMOJI_OPTIONS = [
+  "😊",
+  "😎",
+  "🤩",
+  "🥳",
+  "😋",
+  "🧒",
+  "👦",
+  "👧",
+  "👨",
+  "👩",
+  "👴",
+  "👵",
+  "🐱",
+];
 
 export default function FamilySetupPage() {
   const navigate = useNavigate();
@@ -89,85 +103,83 @@ export default function FamilySetupPage() {
 
         {step === "family" ? (
           <>
-          <form onSubmit={handleCreateFamily} className="space-y-4">
-            <div>
-              <label htmlFor="familyName" className="mb-1 block text-sm font-medium text-text">
-                Username
-              </label>
-              <input
-                id="familyName"
-                type="text"
-                required
-                minLength={3}
-                maxLength={30}
-                value={familyName}
-                onChange={(e) =>
-                  setFamilyName(e.target.value.replace(/[^a-zA-Z0-9_-]/g, ""))
-                }
-                className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-text focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
-                placeholder="smith_family"
-              />
-              <p className="mt-1 text-xs text-text-muted">
-                Letters, numbers, underscores and hyphens only. No spaces.
-              </p>
-            </div>
-
-            <div>
-              <label htmlFor="familySize" className="mb-1 block text-sm font-medium text-text">
-                Family Size: {familySize}
-              </label>
-              <input
-                id="familySize"
-                type="range"
-                min={1}
-                max={20}
-                value={familySize}
-                onChange={(e) => setFamilySize(Number(e.target.value))}
-                className="w-full accent-primary"
-              />
-            </div>
-
-            <div>
-              <label htmlFor="password" className="mb-1 block text-sm font-medium text-text">
-                Password
-              </label>
-              <div className="relative">
+            <form onSubmit={handleCreateFamily} className="space-y-4">
+              <div>
+                <label htmlFor="familyName" className="mb-1 block text-sm font-medium text-text">
+                  Username
+                </label>
                 <input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
+                  id="familyName"
+                  type="text"
                   required
-                  minLength={8}
-                  maxLength={128}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2.5 pr-10 text-text focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
-                  placeholder="Min 8 chars, upper, lower, number"
+                  minLength={3}
+                  maxLength={30}
+                  value={familyName}
+                  onChange={(e) => setFamilyName(e.target.value.replace(/[^a-zA-Z0-9_-]/g, ""))}
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-text focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  placeholder="smith_family"
                 />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword((v) => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                  tabIndex={-1}
-                >
-                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                </button>
+                <p className="mt-1 text-xs text-text-muted">
+                  Letters, numbers, underscores and hyphens only. No spaces.
+                </p>
               </div>
-              <p className="mt-1 text-xs text-text-muted">
-                At least 8 characters with uppercase, lowercase, and a number.
-              </p>
-            </div>
 
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? <Spinner size="sm" /> : "Create Family"}
-            </Button>
-          </form>
+              <div>
+                <label htmlFor="familySize" className="mb-1 block text-sm font-medium text-text">
+                  Family Size: {familySize}
+                </label>
+                <input
+                  id="familySize"
+                  type="range"
+                  min={1}
+                  max={20}
+                  value={familySize}
+                  onChange={(e) => setFamilySize(Number(e.target.value))}
+                  className="w-full accent-primary"
+                />
+              </div>
 
-          <p className="mt-4 text-center text-sm text-text-muted">
-            Already have an account?{" "}
-            <Link to="/login" className="font-medium text-primary hover:underline">
-              Log in
-            </Link>
-          </p>
+              <div>
+                <label htmlFor="password" className="mb-1 block text-sm font-medium text-text">
+                  Password
+                </label>
+                <div className="relative">
+                  <input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    required
+                    minLength={8}
+                    maxLength={128}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2.5 pr-10 text-text focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    placeholder="Min 8 chars, upper, lower, number"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((v) => !v)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    tabIndex={-1}
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
+                <p className="mt-1 text-xs text-text-muted">
+                  At least 8 characters with uppercase, lowercase, and a number.
+                </p>
+              </div>
+
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading ? <Spinner size="sm" /> : "Create Family"}
+              </Button>
+            </form>
+
+            <p className="mt-4 text-center text-sm text-text-muted">
+              Already have an account?{" "}
+              <Link to="/login" className="font-medium text-primary hover:underline">
+                Log in
+              </Link>
+            </p>
           </>
         ) : (
           <form onSubmit={handleCreateUser} className="space-y-4">

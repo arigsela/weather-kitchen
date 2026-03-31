@@ -26,8 +26,8 @@ def test_empty_family_name_rejected_with_422(test_client: TestClient):
 
 
 def test_family_name_exceeding_max_length_rejected_with_422(test_client: TestClient):
-    """Test that a family name longer than 100 characters is rejected."""
-    long_name = "A" * 101
+    """Test that a family name longer than 30 characters is rejected."""
+    long_name = "A" * 31
     response = test_client.post(
         "/api/v1/families",
         json={
@@ -40,8 +40,8 @@ def test_family_name_exceeding_max_length_rejected_with_422(test_client: TestCli
 
 
 def test_family_name_at_max_length_accepted(test_client: TestClient):
-    """Test that a family name of exactly 100 characters is accepted."""
-    max_name = "B" * 100
+    """Test that a family name of exactly 30 characters is accepted."""
+    max_name = "B" * 30
     response = test_client.post(
         "/api/v1/families",
         json={
@@ -58,7 +58,7 @@ def test_family_size_zero_rejected_with_422(test_client: TestClient):
     response = test_client.post(
         "/api/v1/families",
         json={
-            "name": "Test Family",
+            "name": "test_family",
             "family_size": 0,
             "password": "TestPass1",
         },
@@ -71,7 +71,7 @@ def test_family_size_negative_rejected_with_422(test_client: TestClient):
     response = test_client.post(
         "/api/v1/families",
         json={
-            "name": "Test Family",
+            "name": "test_family",
             "family_size": -1,
             "password": "TestPass1",
         },
@@ -84,7 +84,7 @@ def test_family_size_999_rejected_with_422(test_client: TestClient):
     response = test_client.post(
         "/api/v1/families",
         json={
-            "name": "Test Family",
+            "name": "test_family",
             "family_size": 999,
             "password": "TestPass1",
         },
@@ -97,7 +97,7 @@ def test_family_size_21_rejected_with_422(test_client: TestClient):
     response = test_client.post(
         "/api/v1/families",
         json={
-            "name": "Test Family",
+            "name": "test_family",
             "family_size": 21,
             "password": "TestPass1",
         },
@@ -110,7 +110,7 @@ def test_family_size_at_maximum_accepted(test_client: TestClient):
     response = test_client.post(
         "/api/v1/families",
         json={
-            "name": "Large Family",
+            "name": "large_family",
             "family_size": 20,
             "password": "TestPass1",
         },
@@ -128,7 +128,7 @@ def test_password_too_short_rejected_with_422(test_client: TestClient):
     response = test_client.post(
         "/api/v1/families",
         json={
-            "name": "Test Family",
+            "name": "test_family",
             "family_size": 4,
             "password": "Short1",
         },
@@ -141,7 +141,7 @@ def test_password_no_uppercase_rejected_with_422(test_client: TestClient):
     response = test_client.post(
         "/api/v1/families",
         json={
-            "name": "Test Family",
+            "name": "test_family",
             "family_size": 4,
             "password": "alllowercase1",
         },
@@ -154,7 +154,7 @@ def test_password_no_lowercase_rejected_with_422(test_client: TestClient):
     response = test_client.post(
         "/api/v1/families",
         json={
-            "name": "Test Family",
+            "name": "test_family",
             "family_size": 4,
             "password": "ALLUPPERCASE1",
         },
@@ -167,7 +167,7 @@ def test_password_no_digit_rejected_with_422(test_client: TestClient):
     response = test_client.post(
         "/api/v1/families",
         json={
-            "name": "Test Family",
+            "name": "test_family",
             "family_size": 4,
             "password": "NoDigitsHere",
         },
@@ -180,7 +180,7 @@ def test_valid_password_accepted(test_client: TestClient):
     response = test_client.post(
         "/api/v1/families",
         json={
-            "name": "Test Family",
+            "name": "test_family",
             "family_size": 4,
             "password": "TestPass1",
         },
@@ -193,7 +193,7 @@ def test_password_with_special_characters_accepted(test_client: TestClient):
     response = test_client.post(
         "/api/v1/families",
         json={
-            "name": "Test Family",
+            "name": "test_family",
             "family_size": 4,
             "password": "Test!@Pass1",
         },
@@ -314,7 +314,7 @@ def test_missing_required_field_password_rejected_with_422(test_client: TestClie
     response = test_client.post(
         "/api/v1/families",
         json={
-            "name": "Test Family",
+            "name": "test_family",
             "family_size": 4,
         },
     )
@@ -326,7 +326,7 @@ def test_missing_required_field_family_size_rejected_with_422(test_client: TestC
     response = test_client.post(
         "/api/v1/families",
         json={
-            "name": "Test Family",
+            "name": "test_family",
             "password": "TestPass1",
         },
     )

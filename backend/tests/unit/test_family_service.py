@@ -13,13 +13,13 @@ def test_create_family_generates_token(test_db: Session):
     """Test that family creation generates a JWT access + refresh token pair."""
     service = FamilyService(test_db)
     response, access_token, refresh_token = service.create_family(
-        name="Test Family",
+        name="test_family",
         family_size=4,
         password="TestPass1",
     )
 
     assert response.id is not None
-    assert response.name == "Test Family"
+    assert response.name == "test_family"
     assert response.family_size == 4
     assert response.is_active is True
     # JWT tokens have 2 dots (3 parts: header.payload.signature)

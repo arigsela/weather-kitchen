@@ -8,13 +8,7 @@ export function useToggleFavorite() {
   const { currentUserId } = useCurrentUser();
 
   return useMutation({
-    mutationFn: async ({
-      recipeId,
-      isFavorite,
-    }: {
-      recipeId: string;
-      isFavorite: boolean;
-    }) => {
+    mutationFn: async ({ recipeId, isFavorite }: { recipeId: string; isFavorite: boolean }) => {
       if (isFavorite) {
         await apiClient.delete(`api/v1/users/${currentUserId}/favorites/${recipeId}`);
       } else {

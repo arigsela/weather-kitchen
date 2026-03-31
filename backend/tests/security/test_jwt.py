@@ -103,7 +103,7 @@ def test_refresh_endpoint_returns_new_token_pair(test_client: TestClient):
     """POST /auth/refresh with valid refresh token returns new access + refresh tokens."""
     create_resp = test_client.post(
         "/api/v1/families",
-        json={"name": "Refresh Test Family", "family_size": 2, "password": "TestPass1"},
+        json={"name": "refresh_test_family", "family_size": 2, "password": "TestPass1"},
     )
     assert create_resp.status_code == 201
     refresh_token = create_resp.json()["refresh_token"]
@@ -120,7 +120,7 @@ def test_refresh_token_rotation_revokes_old_token(test_client: TestClient):
     """After refresh, the old refresh token cannot be reused (rotation)."""
     create_resp = test_client.post(
         "/api/v1/families",
-        json={"name": "Rotation Test", "family_size": 2, "password": "TestPass1"},
+        json={"name": "rotation_test", "family_size": 2, "password": "TestPass1"},
     )
     old_refresh = create_resp.json()["refresh_token"]
 
@@ -161,7 +161,7 @@ def test_logout_revokes_refresh_token(test_client: TestClient):
     """POST /auth/logout revokes the refresh token — subsequent refresh fails."""
     create_resp = test_client.post(
         "/api/v1/families",
-        json={"name": "Logout Test", "family_size": 2, "password": "TestPass1"},
+        json={"name": "logout_test", "family_size": 2, "password": "TestPass1"},
     )
     refresh_token = create_resp.json()["refresh_token"]
 

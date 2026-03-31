@@ -130,7 +130,7 @@ def test_update_family_requires_auth(test_client: TestClient, family_factory, te
 
     response = test_client.put(
         f"/api/v1/families/{family.id}",
-        json={"name": "New Name"},
+        json={"name": "new_name"},
     )
     assert response.status_code == 401
 

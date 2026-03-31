@@ -6,9 +6,7 @@ export function useAuth() {
   const { accessToken, refreshToken, tokenExpiry, hasCompletedSetup, setTokens, clearTokens } =
     useAppStore();
 
-  const [isBootstrapping, setIsBootstrapping] = useState(
-    () => !accessToken && !!refreshToken,
-  );
+  const [isBootstrapping, setIsBootstrapping] = useState(() => !accessToken && !!refreshToken);
 
   // Guard against React StrictMode double-invoking this effect: the refresh
   // token is single-use (rotation). If the effect fires twice with the same

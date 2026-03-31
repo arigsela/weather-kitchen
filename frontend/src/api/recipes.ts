@@ -33,9 +33,7 @@ export async function fetchRecipes(params: FetchRecipesParams = {}): Promise<Rec
   searchParams.limit = String(limit);
   searchParams.offset = String((page - 1) * limit);
 
-  const res = await publicClient
-    .get("api/v1/recipes", { searchParams })
-    .json<RecipeListResponse>();
+  const res = await publicClient.get("api/v1/recipes", { searchParams }).json<RecipeListResponse>();
 
   return {
     items: res.items,

@@ -115,7 +115,7 @@ def test_rotation_new_refresh_token_cannot_reuse_old(
     # Get the initial refresh token by creating the family via API
     create_response = test_client.post(
         "/api/v1/families",
-        json={"name": "Rotate Test", "family_size": 2, "password": "TestPass2"},
+        json={"name": "rotate_test", "family_size": 2, "password": "TestPass2"},
     )
     assert create_response.status_code == 201
     old_refresh = create_response.json()["refresh_token"]

@@ -77,7 +77,7 @@ def family_factory(test_db):
 
     def _create_family(
         db: Session = None,
-        name: str = "Test Family",
+        name: str = "test_family",
         family_size: int = 4,
         password: str = "TestPass1",
         is_active: bool = True,

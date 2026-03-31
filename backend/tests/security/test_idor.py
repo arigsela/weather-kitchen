@@ -133,7 +133,7 @@ def test_cannot_update_other_family(test_client: TestClient, family_factory, tes
 
     response = test_client.put(
         f"/api/v1/families/{family1.id}",
-        json={"name": "Hijacked Family"},
+        json={"name": "hijacked_family"},
         headers={"Authorization": f"Bearer {token2}"},
     )
 

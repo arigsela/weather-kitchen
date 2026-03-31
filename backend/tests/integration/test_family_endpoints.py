@@ -10,7 +10,7 @@ def test_create_family_returns_token(test_client: TestClient):
     response = test_client.post(
         "/api/v1/families",
         json={
-            "name": "Test Family",
+            "name": "test_family",
             "family_size": 4,
             "password": "TestPass1",
         },
@@ -19,7 +19,7 @@ def test_create_family_returns_token(test_client: TestClient):
     assert response.status_code == 201
     data = response.json()
     assert data["id"] is not None
-    assert data["name"] == "Test Family"
+    assert data["name"] == "test_family"
     assert data["access_token"] is not None
     assert data["refresh_token"] is not None
     assert data["token_type"] == "bearer"
@@ -54,13 +54,13 @@ def test_update_family_changes_name(test_client: TestClient, family_factory, tes
 
     response = test_client.put(
         f"/api/v1/families/{family.id}",
-        json={"name": "Updated Family Name"},
+        json={"name": "updated_family_name"},
         headers={"Authorization": f"Bearer {token}"},
     )
 
     assert response.status_code == 200
     data = response.json()
-    assert data["name"] == "Updated Family Name"
+    assert data["name"] == "updated_family_name"
 
 
 def test_soft_delete_family(test_client: TestClient, family_factory, test_db):
