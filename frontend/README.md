@@ -23,17 +23,17 @@ The Vite dev server proxies `/api` and `/health` to the backend automatically. M
 
 ## Tech Stack
 
-| Component | Technology |
-|-----------|-----------|
-| Framework | React 19 + TypeScript 5.9 |
-| Build | Vite 8 |
-| Server State | TanStack Query v5 |
-| Client State | Zustand v5 (persisted) |
-| Styling | Tailwind CSS v4 |
-| HTTP Client | ky |
-| Icons | Lucide React |
-| Testing | Vitest + React Testing Library |
-| E2E | Playwright |
+| Component    | Technology                     |
+| ------------ | ------------------------------ |
+| Framework    | React 19 + TypeScript 5.9      |
+| Build        | Vite 8                         |
+| Server State | TanStack Query v5              |
+| Client State | Zustand v5 (persisted)         |
+| Styling      | Tailwind CSS v4                |
+| HTTP Client  | ky                             |
+| Icons        | Lucide React                   |
+| Testing      | Vitest + React Testing Library |
+| E2E          | Playwright                     |
 
 ---
 
@@ -79,18 +79,18 @@ src/
 
 ## Routes
 
-| Path | Page | Auth Required |
-|------|------|:---:|
-| `/setup` | Family creation + first user | No |
-| `/` | Weather selector (home) | Yes |
-| `/recipes/:weather` | Recipe list for weather type | Yes |
-| `/recipes/:weather/:id` | Recipe detail | Yes |
-| `/pantry` | Ingredient management | Yes |
-| `/favorites` | Favorite recipes | Yes |
-| `/users` | User selector ("Who's cooking?") | Yes |
-| `/settings` | Family settings | Yes |
-| `/privacy` | Privacy policy | Yes |
-| `/privacy/data` | Data export/delete (GDPR) | Yes |
+| Path                    | Page                             | Auth Required |
+| ----------------------- | -------------------------------- | :-----------: |
+| `/setup`                | Family creation + first user     |      No       |
+| `/`                     | Weather selector (home)          |      Yes      |
+| `/recipes/:weather`     | Recipe list for weather type     |      Yes      |
+| `/recipes/:weather/:id` | Recipe detail                    |      Yes      |
+| `/pantry`               | Ingredient management            |      Yes      |
+| `/favorites`            | Favorite recipes                 |      Yes      |
+| `/users`                | User selector ("Who's cooking?") |      Yes      |
+| `/settings`             | Family settings                  |      Yes      |
+| `/privacy`              | Privacy policy                   |      Yes      |
+| `/privacy/data`         | Data export/delete (GDPR)        |      Yes      |
 
 ---
 
