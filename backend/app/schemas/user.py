@@ -131,6 +131,7 @@ class FavoriteResponse(BaseModel):
     user_id: UUID = Field(..., description="User UUID")
     recipe_id: UUID = Field(..., description="Recipe UUID")
     recipe_name: str = Field(..., description="Recipe name (for reference)")
+    recipe_weather: str = Field(..., description="Weather type the recipe belongs to")
     added_at: datetime = Field(..., description="When added to favorites")
 
     model_config = ConfigDict(

@@ -24,17 +24,27 @@ class FamilyRepository(BaseRepository[Family]):
             query = query.filter(Family.is_active == True)  # noqa: E712
         return query.first()
 
+    def get_by_name(self, name: str) -> Family | None:
+        """Get active family by name (case-insensitive)."""
+        return (
+            self.db.query(Family)
+            .filter(Family.name.ilike(name), Family.is_active == True)  # noqa: E712
+            .first()
+        )
+
     def create_family(
         self,
         name: str,
         family_size: int,
-        admin_pin_hash: str,
+        password_hash: str | None = None,
+        admin_pin_hash: str | None = None,
     ) -> Family:
         """Create new family account."""
         family = Family(
             id=self._generate_uuid(),
             name=name,
             family_size=family_size,
+            password_hash=password_hash,
             admin_pin_hash=admin_pin_hash,
             is_active=True,
             created_at=datetime.now(UTC),

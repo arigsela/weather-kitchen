@@ -142,12 +142,12 @@ def test_cannot_update_other_family(test_client: TestClient, family_factory, tes
 
 def test_cannot_rotate_token_for_other_family(test_client: TestClient, family_factory, test_db):
     """Test that rotating token for other family returns 404."""
-    family1, token1 = family_factory(test_db, name="Family 1", admin_pin="1111")
-    family2, token2 = family_factory(test_db, name="Family 2", admin_pin="2222")
+    family1, token1 = family_factory(test_db, name="Family 1", password="TestPass1")
+    family2, token2 = family_factory(test_db, name="Family 2", password="TestPass2")
 
     response = test_client.post(
         f"/api/v1/families/{family1.id}/token/rotate",
-        json={"admin_pin": "2222"},
+        json={"password": "TestPass2"},
         headers={"Authorization": f"Bearer {token2}"},
     )
 
@@ -167,14 +167,14 @@ def test_cannot_access_export_from_other_family(test_client: TestClient, family_
     assert response.status_code == 404
 
 
-def test_cannot_verify_pin_for_other_family(test_client: TestClient, family_factory, test_db):
-    """Test that verifying PIN for other family returns 404."""
-    family1, token1 = family_factory(test_db, name="Family 1", admin_pin="1111")
-    family2, token2 = family_factory(test_db, name="Family 2", admin_pin="2222")
+def test_cannot_verify_password_for_other_family(test_client: TestClient, family_factory, test_db):
+    """Test that verifying password for other family returns 404."""
+    family1, token1 = family_factory(test_db, name="Family 1", password="TestPass1")
+    family2, token2 = family_factory(test_db, name="Family 2", password="TestPass2")
 
     response = test_client.post(
-        f"/api/v1/families/{family1.id}/verify-pin",
-        json={"admin_pin": "1111"},
+        f"/api/v1/families/{family1.id}/verify-password",
+        json={"password": "TestPass1"},
         headers={"Authorization": f"Bearer {token2}"},
     )
 

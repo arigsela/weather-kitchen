@@ -8,7 +8,7 @@ from uuid import UUID
 from sqlalchemy.orm import Session
 
 from app.auth.jwt import create_access_token, create_refresh_token
-from app.auth.pin import hash_pin
+from app.auth.password import hash_password, verify_password
 from app.auth.pin import verify_pin as verify_pin_hash
 from app.config import settings
 from app.repositories.family_repo import FamilyRepository
@@ -28,7 +28,7 @@ class FamilyService:
         self,
         name: str,
         family_size: int,
-        admin_pin: str,
+        password: str,
     ) -> tuple[FamilyResponse, str, str]:
         """
         Create new family account and issue JWT token pair.
@@ -36,12 +36,12 @@ class FamilyService:
         Returns:
             Tuple of (family_response, access_token, refresh_token)
         """
-        pin_hash = hash_pin(admin_pin)
+        pw_hash = hash_password(password)
 
         family = self.repository.create_family(
             name=name,
             family_size=family_size,
-            admin_pin_hash=pin_hash,
+            password_hash=pw_hash,
         )
         self.db.flush()
 
@@ -50,6 +50,52 @@ class FamilyService:
         refresh_token, _ = create_refresh_token(str(family.id))
 
         # Persist refresh token
+        expires_at = datetime.now(UTC) + timedelta(days=settings.jwt_refresh_token_expire_days)
+        self.refresh_repo.create(family.id, refresh_token, expires_at)
+
+        self.db.commit()
+
+        response = FamilyResponse.model_validate(family)
+        return response, access_token, refresh_token
+
+    def login(
+        self,
+        name: str,
+        password: str,
+    ) -> tuple[FamilyResponse, str, str] | None:
+        """
+        Authenticate a family by name and password, issue JWT tokens.
+
+        Returns:
+            Tuple of (family_response, access_token, refresh_token) or None if auth fails.
+            Raises ValueError with message on lockout or wrong password.
+        """
+        family = self.repository.get_by_name(name)
+        if not family or not family.password_hash:
+            return None
+
+        # Check lockout
+        if family.pin_locked_until:
+            locked_until = family.pin_locked_until
+            if locked_until.tzinfo is None:
+                locked_until = locked_until.replace(tzinfo=UTC)
+            if locked_until > datetime.now(UTC):
+                raise ValueError("Account locked. Try again later.")
+
+        # Verify password
+        if not verify_password(password, family.password_hash):
+            self.repository.update_pin_attempts(family.id, family.pin_attempts + 1)
+            self.db.commit()
+            remaining = max(0, settings.password_max_attempts - (family.pin_attempts + 1))
+            raise ValueError(f"Invalid password ({remaining} attempts remaining)")
+
+        # Reset attempts on success
+        self.repository.reset_pin_attempts(family.id)
+
+        # Issue JWT tokens
+        access_token = create_access_token(str(family.id))
+        refresh_token, _ = create_refresh_token(str(family.id))
+
         expires_at = datetime.now(UTC) + timedelta(days=settings.jwt_refresh_token_expire_days)
         self.refresh_repo.create(family.id, refresh_token, expires_at)
 
@@ -197,7 +243,13 @@ class FamilyService:
             if locked_until > datetime.now(UTC):
                 return False, f"Locked until {locked_until.isoformat()}"
 
-        pin_correct = verify_pin_hash(admin_pin, family.admin_pin_hash)
+        # Check password_hash first (new), fall back to admin_pin_hash (legacy)
+        if family.password_hash:
+            pin_correct = verify_password(admin_pin, family.password_hash)
+        elif family.admin_pin_hash:
+            pin_correct = verify_pin_hash(admin_pin, family.admin_pin_hash)
+        else:
+            pin_correct = False
 
         if not pin_correct:
             self.repository.update_pin_attempts(family_id, family.pin_attempts + 1)

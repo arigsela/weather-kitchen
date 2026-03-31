@@ -67,7 +67,7 @@ def test_xss_in_family_name_on_create(test_client: TestClient, payload: str):
         json={
             "name": payload,
             "family_size": 3,
-            "admin_pin": "1234",
+            "password": "TestPass1",
         },
     )
     _assert_payload_handled(response, payload)
@@ -195,7 +195,7 @@ def test_onerror_attribute_stored_as_literal_or_rejected(
         json={
             "name": payload,
             "family_size": 2,
-            "admin_pin": "4321",
+            "password": "TestPass1",
         },
     )
     if response.status_code in (200, 201):

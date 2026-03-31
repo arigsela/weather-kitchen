@@ -1,5 +1,5 @@
 """
-Unit tests for FamilyService - token generation, PIN lockout, consent flow.
+Unit tests for FamilyService - token generation, password lockout, consent flow.
 """
 
 from datetime import UTC, datetime, timedelta
@@ -15,7 +15,7 @@ def test_create_family_generates_token(test_db: Session):
     response, access_token, refresh_token = service.create_family(
         name="Test Family",
         family_size=4,
-        admin_pin="1234",
+        password="TestPass1",
     )
 
     assert response.id is not None
@@ -27,89 +27,89 @@ def test_create_family_generates_token(test_db: Session):
     assert refresh_token.count(".") == 2
 
 
-def test_create_family_hashes_pin(test_db: Session):
-    """Test that admin PIN is properly hashed."""
+def test_create_family_hashes_password(test_db: Session):
+    """Test that password is properly hashed."""
     service = FamilyService(test_db)
-    admin_pin = "5678"
+    password = "TestPass2"
     response, access_token, refresh_token = service.create_family(
-        name="PIN Test Family",
+        name="Password Test Family",
         family_size=2,
-        admin_pin=admin_pin,
+        password=password,
     )
 
-    # Verify PIN can be verified
-    verified, message = service.verify_pin(response.id, admin_pin)
+    # Verify password can be verified
+    verified, message = service.verify_pin(response.id, password)
     assert verified is True
     assert message is None
 
 
-def test_verify_pin_wrong_pin_fails(test_db: Session, family_factory):
-    """Test that wrong PIN fails verification."""
-    family, token = family_factory(test_db, admin_pin="1234")
+def test_verify_pin_wrong_password_fails(test_db: Session, family_factory):
+    """Test that wrong password fails verification."""
+    family, token = family_factory(test_db, password="TestPass1")
     service = FamilyService(test_db)
 
-    verified, message = service.verify_pin(family.id, "9999")
+    verified, message = service.verify_pin(family.id, "WrongPass1")
     assert verified is False
     assert "Invalid PIN" in message
 
 
 def test_pin_lockout_after_5_attempts(test_db: Session, family_factory):
-    """Test that PIN locks after 5 failed attempts."""
-    family, token = family_factory(test_db, admin_pin="1234")
+    """Test that password locks after 5 failed attempts."""
+    family, token = family_factory(test_db, password="TestPass1")
     service = FamilyService(test_db)
 
     # Make 5 failed attempts
     for i in range(5):
-        verified, message = service.verify_pin(family.id, "9999")
+        verified, message = service.verify_pin(family.id, "WrongPass1")
         assert verified is False
 
     # 6th attempt should trigger lockout
-    verified, message = service.verify_pin(family.id, "1234")
+    verified, message = service.verify_pin(family.id, "TestPass1")
     assert verified is False
     assert "Locked until" in message
 
 
 def test_pin_lockout_expires_after_15_minutes(test_db: Session, family_factory):
-    """Test that PIN lockout expires after 15 minutes."""
-    family, token = family_factory(test_db, admin_pin="1234")
+    """Test that password lockout expires after 15 minutes."""
+    family, token = family_factory(test_db, password="TestPass1")
     service = FamilyService(test_db)
 
     # Trigger lockout
     for i in range(5):
-        service.verify_pin(family.id, "9999")
+        service.verify_pin(family.id, "WrongPass1")
 
     # Set lockout to past
     family.pin_locked_until = datetime.now(UTC) - timedelta(seconds=1)
     test_db.commit()
 
     # Should now work
-    verified, message = service.verify_pin(family.id, "1234")
+    verified, message = service.verify_pin(family.id, "TestPass1")
     assert verified is True
 
 
 def test_successful_pin_resets_attempts(test_db: Session, family_factory):
-    """Test that successful PIN verification resets attempt counter."""
-    family, token = family_factory(test_db, admin_pin="1234")
+    """Test that successful password verification resets attempt counter."""
+    family, token = family_factory(test_db, password="TestPass1")
     service = FamilyService(test_db)
 
     # Make 2 failed attempts
     for i in range(2):
-        service.verify_pin(family.id, "9999")
+        service.verify_pin(family.id, "WrongPass1")
 
-    # Verify correct PIN
-    verified, message = service.verify_pin(family.id, "1234")
+    # Verify correct password
+    verified, message = service.verify_pin(family.id, "TestPass1")
     assert verified is True
 
     # Should be able to make more failed attempts without lockout
     for i in range(3):
-        service.verify_pin(family.id, "9999")
-    verified, _ = service.verify_pin(family.id, "1234")
+        service.verify_pin(family.id, "WrongPass1")
+    verified, _ = service.verify_pin(family.id, "TestPass1")
     assert verified is True
 
 
 def test_rotate_token_generates_new_token(test_db: Session, family_factory):
     """Test that token rotation issues a new JWT access + refresh pair."""
-    family, old_access_token = family_factory(test_db, admin_pin="1234")
+    family, old_access_token = family_factory(test_db, password="TestPass1")
     service = FamilyService(test_db)
 
     new_access, new_refresh = service.rotate_tokens(family.id)

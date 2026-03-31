@@ -63,7 +63,7 @@ def test_sql_injection_in_family_name_on_create(test_client: TestClient, payload
         json={
             "name": payload,
             "family_size": 3,
-            "admin_pin": "1234",
+            "password": "TestPass1",
         },
     )
     _assert_payload_handled(response, payload)

@@ -19,7 +19,7 @@ def test_empty_family_name_rejected_with_422(test_client: TestClient):
         json={
             "name": "",
             "family_size": 4,
-            "admin_pin": "1234",
+            "password": "TestPass1",
         },
     )
     assert response.status_code == 422
@@ -33,7 +33,7 @@ def test_family_name_exceeding_max_length_rejected_with_422(test_client: TestCli
         json={
             "name": long_name,
             "family_size": 4,
-            "admin_pin": "1234",
+            "password": "TestPass1",
         },
     )
     assert response.status_code == 422
@@ -47,7 +47,7 @@ def test_family_name_at_max_length_accepted(test_client: TestClient):
         json={
             "name": max_name,
             "family_size": 4,
-            "admin_pin": "1234",
+            "password": "TestPass1",
         },
     )
     assert response.status_code == 201
@@ -60,7 +60,7 @@ def test_family_size_zero_rejected_with_422(test_client: TestClient):
         json={
             "name": "Test Family",
             "family_size": 0,
-            "admin_pin": "1234",
+            "password": "TestPass1",
         },
     )
     assert response.status_code == 422
@@ -73,7 +73,7 @@ def test_family_size_negative_rejected_with_422(test_client: TestClient):
         json={
             "name": "Test Family",
             "family_size": -1,
-            "admin_pin": "1234",
+            "password": "TestPass1",
         },
     )
     assert response.status_code == 422
@@ -86,7 +86,7 @@ def test_family_size_999_rejected_with_422(test_client: TestClient):
         json={
             "name": "Test Family",
             "family_size": 999,
-            "admin_pin": "1234",
+            "password": "TestPass1",
         },
     )
     assert response.status_code == 422
@@ -99,7 +99,7 @@ def test_family_size_21_rejected_with_422(test_client: TestClient):
         json={
             "name": "Test Family",
             "family_size": 21,
-            "admin_pin": "1234",
+            "password": "TestPass1",
         },
     )
     assert response.status_code == 422
@@ -112,106 +112,93 @@ def test_family_size_at_maximum_accepted(test_client: TestClient):
         json={
             "name": "Large Family",
             "family_size": 20,
-            "admin_pin": "1234",
+            "password": "TestPass1",
         },
     )
     assert response.status_code == 201
 
 
 # ---------------------------------------------------------------------------
-# Admin PIN validation tests
+# Password validation tests
 # ---------------------------------------------------------------------------
 
 
-def test_admin_pin_with_letters_rejected_with_422(test_client: TestClient):
-    """Test that a PIN containing alphabetical characters is rejected."""
+def test_password_too_short_rejected_with_422(test_client: TestClient):
+    """Test that a password shorter than 8 characters is rejected."""
     response = test_client.post(
         "/api/v1/families",
         json={
             "name": "Test Family",
             "family_size": 4,
-            "admin_pin": "abcd",
+            "password": "Short1",
         },
     )
     assert response.status_code == 422
 
 
-def test_admin_pin_with_mixed_alphanumeric_rejected_with_422(test_client: TestClient):
-    """Test that a PIN mixing digits and letters is rejected."""
+def test_password_no_uppercase_rejected_with_422(test_client: TestClient):
+    """Test that a password without uppercase letters is rejected."""
     response = test_client.post(
         "/api/v1/families",
         json={
             "name": "Test Family",
             "family_size": 4,
-            "admin_pin": "12ab",
+            "password": "alllowercase1",
         },
     )
     assert response.status_code == 422
 
 
-def test_admin_pin_too_short_rejected_with_422(test_client: TestClient):
-    """Test that a PIN of fewer than 4 digits is rejected."""
+def test_password_no_lowercase_rejected_with_422(test_client: TestClient):
+    """Test that a password without lowercase letters is rejected."""
     response = test_client.post(
         "/api/v1/families",
         json={
             "name": "Test Family",
             "family_size": 4,
-            "admin_pin": "123",
+            "password": "ALLUPPERCASE1",
         },
     )
     assert response.status_code == 422
 
 
-def test_admin_pin_too_long_rejected_with_422(test_client: TestClient):
-    """Test that a PIN of more than 6 digits is rejected."""
+def test_password_no_digit_rejected_with_422(test_client: TestClient):
+    """Test that a password without any digit is rejected."""
     response = test_client.post(
         "/api/v1/families",
         json={
             "name": "Test Family",
             "family_size": 4,
-            "admin_pin": "1234567",
+            "password": "NoDigitsHere",
         },
     )
     assert response.status_code == 422
 
 
-def test_admin_pin_4_digits_accepted(test_client: TestClient):
-    """Test that a 4-digit PIN is accepted as the minimum valid length."""
+def test_valid_password_accepted(test_client: TestClient):
+    """Test that a valid password (min 8 chars, 1 upper, 1 lower, 1 digit) is accepted."""
     response = test_client.post(
         "/api/v1/families",
         json={
             "name": "Test Family",
             "family_size": 4,
-            "admin_pin": "1234",
+            "password": "TestPass1",
         },
     )
     assert response.status_code == 201
 
 
-def test_admin_pin_6_digits_accepted(test_client: TestClient):
-    """Test that a 6-digit PIN is accepted as the maximum valid length."""
+def test_password_with_special_characters_accepted(test_client: TestClient):
+    """Test that a valid password containing special characters is accepted."""
     response = test_client.post(
         "/api/v1/families",
         json={
             "name": "Test Family",
             "family_size": 4,
-            "admin_pin": "123456",
+            "password": "Test!@Pass1",
         },
     )
     assert response.status_code == 201
-
-
-def test_admin_pin_with_special_characters_rejected_with_422(test_client: TestClient):
-    """Test that a PIN containing special characters is rejected."""
-    response = test_client.post(
-        "/api/v1/families",
-        json={
-            "name": "Test Family",
-            "family_size": 4,
-            "admin_pin": "12!@",
-        },
-    )
-    assert response.status_code == 422
 
 
 # ---------------------------------------------------------------------------
@@ -271,7 +258,7 @@ def test_null_byte_in_family_name_rejected_or_sanitized(test_client: TestClient)
         json={
             "name": "Family\x00Name",
             "family_size": 4,
-            "admin_pin": "1234",
+            "password": "TestPass1",
         },
     )
     assert response.status_code in (201, 422)
@@ -304,7 +291,7 @@ def test_whitespace_only_family_name_rejected_or_treated_as_valid(test_client: T
         json={
             "name": "   ",
             "family_size": 4,
-            "admin_pin": "1234",
+            "password": "TestPass1",
         },
     )
     assert response.status_code in (201, 422)
@@ -316,14 +303,14 @@ def test_missing_required_field_family_name_rejected_with_422(test_client: TestC
         "/api/v1/families",
         json={
             "family_size": 4,
-            "admin_pin": "1234",
+            "password": "TestPass1",
         },
     )
     assert response.status_code == 422
 
 
-def test_missing_required_field_admin_pin_rejected_with_422(test_client: TestClient):
-    """Test that omitting the required admin_pin field results in a 422 error."""
+def test_missing_required_field_password_rejected_with_422(test_client: TestClient):
+    """Test that omitting the required password field results in a 422 error."""
     response = test_client.post(
         "/api/v1/families",
         json={
@@ -340,7 +327,7 @@ def test_missing_required_field_family_size_rejected_with_422(test_client: TestC
         "/api/v1/families",
         json={
             "name": "Test Family",
-            "admin_pin": "1234",
+            "password": "TestPass1",
         },
     )
     assert response.status_code == 422

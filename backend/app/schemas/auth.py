@@ -8,24 +8,36 @@ from uuid import UUID
 from pydantic import BaseModel, ConfigDict, Field
 
 # ---------------------------------------------------------------------------
-# PIN schemas
+# Login schemas
 # ---------------------------------------------------------------------------
 
 
-class PinVerifyRequest(BaseModel):
-    """Verify PIN request."""
+class LoginRequest(BaseModel):
+    """Login with family name and password."""
 
-    admin_pin: str = Field(
-        ..., min_length=4, max_length=6, pattern=r"^\d+$", description="4-6 digit numeric PIN"
-    )
+    name: str = Field(..., min_length=1, max_length=100, description="Family name")
+    password: str = Field(..., min_length=1, max_length=128, description="Password")
 
-    model_config = ConfigDict(examples=[{"admin_pin": "1234"}])
+    model_config = ConfigDict(examples=[{"name": "Smith Family", "password": "MySecret1"}])
 
 
-class PinVerifyResponse(BaseModel):
-    """PIN verification response."""
+# ---------------------------------------------------------------------------
+# Password verification schemas
+# ---------------------------------------------------------------------------
 
-    success: bool = Field(..., description="Whether PIN was correct")
+
+class PasswordVerifyRequest(BaseModel):
+    """Verify password for sensitive operations."""
+
+    password: str = Field(..., min_length=1, max_length=128, description="Family password")
+
+    model_config = ConfigDict(examples=[{"password": "MySecret1"}])
+
+
+class PasswordVerifyResponse(BaseModel):
+    """Password verification response."""
+
+    success: bool = Field(..., description="Whether password was correct")
     message: str = Field(..., description="Status message")
     lockout_until: datetime | None = Field(
         None, description="Timestamp when lockout expires (if locked)"
@@ -33,12 +45,7 @@ class PinVerifyResponse(BaseModel):
 
     model_config = ConfigDict(
         examples=[
-            {"success": True, "message": "PIN verified successfully", "lockout_until": None},
-            {
-                "success": False,
-                "message": "PIN incorrect (4 attempts remaining)",
-                "lockout_until": None,
-            },
+            {"success": True, "message": "Password verified", "lockout_until": None},
         ]
     )
 
@@ -94,13 +101,11 @@ class LogoutRequest(BaseModel):
 
 
 class TokenRotateRequest(BaseModel):
-    """Revoke all refresh tokens and issue new pair (requires PIN)."""
+    """Revoke all refresh tokens and issue new pair (requires password)."""
 
-    admin_pin: str = Field(
-        ..., min_length=4, max_length=6, pattern=r"^\d+$", description="4-6 digit numeric PIN"
-    )
+    password: str = Field(..., min_length=1, max_length=128, description="Family password")
 
-    model_config = ConfigDict(examples=[{"admin_pin": "1234"}])
+    model_config = ConfigDict(examples=[{"password": "MySecret1"}])
 
 
 class TokenRotateResponse(BaseModel):

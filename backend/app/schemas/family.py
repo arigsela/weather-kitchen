@@ -18,23 +18,45 @@ def _reject_null_bytes(v: str) -> str:
 class FamilyCreate(BaseModel):
     """Create family account request."""
 
-    name: str = Field(..., min_length=1, max_length=100, description="Family name")
+    name: str = Field(
+        ...,
+        min_length=3,
+        max_length=30,
+        description="Username (3-30 chars, letters, numbers, underscores and hyphens only)",
+    )
     family_size: int = Field(..., ge=1, le=20, description="Number of family members (1-20)")
-    admin_pin: str = Field(
-        ..., min_length=4, max_length=6, pattern=r"^\d+$", description="4-6 digit numeric PIN"
+    password: str = Field(
+        ...,
+        min_length=8,
+        max_length=128,
+        description="Password (min 8 chars, must include uppercase, lowercase, and digit)",
     )
 
     @field_validator("name")
     @classmethod
     def name_no_null_bytes(cls, v: str) -> str:
-        return _reject_null_bytes(v)
+        import re
+
+        _reject_null_bytes(v)
+        if not re.match(r"^[a-zA-Z0-9_-]+$", v):
+            raise ValueError(
+                "Username may only contain letters, numbers, underscores, and hyphens (no spaces)"
+            )
+        return v
+
+    @field_validator("password")
+    @classmethod
+    def password_strength(cls, v: str) -> str:
+        from app.auth.password import validate_password_strength
+
+        return validate_password_strength(v)
 
     model_config = ConfigDict(
         examples=[
             {
                 "name": "Smith Family",
                 "family_size": 4,
-                "admin_pin": "1234",
+                "password": "MySecret1",
             }
         ]
     )

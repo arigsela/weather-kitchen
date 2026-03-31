@@ -28,8 +28,11 @@ class Family(DeclarativeBase):
     family_size = Column(Integer, nullable=False)
     is_active = Column(Boolean, default=True, nullable=False)
 
-    # PIN Authentication (for sensitive operations: rotate, purge)
-    admin_pin_hash = Column(String(128), nullable=False)  # bcrypt hash
+    # Password Authentication (for login and sensitive operations)
+    password_hash = Column(String(128), nullable=True)  # bcrypt hash
+
+    # PIN Authentication (legacy, kept for backward compat)
+    admin_pin_hash = Column(String(128), nullable=True)  # bcrypt hash
     pin_attempts = Column(Integer, default=0, nullable=False)
     pin_locked_until = Column(DateTime, nullable=True)
 

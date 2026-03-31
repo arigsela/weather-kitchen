@@ -54,8 +54,8 @@ engine = create_engine(
     echo=settings.database_echo,
     connect_args={"check_same_thread": False} if "sqlite" in settings.database_url else {},
     # Connection pooling configuration
-    pool_size=5 if "postgresql" in settings.database_url else 1,
-    max_overflow=10 if "postgresql" in settings.database_url else 0,
+    pool_size=5 if "postgresql" in settings.database_url else 5,
+    max_overflow=10 if "postgresql" in settings.database_url else 5,
 )
 
 # Enable SQLite WAL mode for concurrent read/write

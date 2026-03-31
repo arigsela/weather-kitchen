@@ -116,6 +116,7 @@ class UserService:
                     user_id=fav.user_id,
                     recipe_id=fav.recipe_id,
                     recipe_name=fav.recipe.name if fav.recipe else "Unknown",
+                    recipe_weather=fav.recipe.weather if fav.recipe else "sunny",
                     added_at=fav.added_at,
                 )
                 for fav in favorites
@@ -137,6 +138,7 @@ class UserService:
             user_id=favorite.user_id,
             recipe_id=favorite.recipe_id,
             recipe_name=favorite.recipe.name if favorite.recipe else "Unknown",
+            recipe_weather=favorite.recipe.weather if favorite.recipe else "sunny",
             added_at=favorite.added_at,
         )
 

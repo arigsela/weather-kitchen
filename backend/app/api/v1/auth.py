@@ -7,10 +7,56 @@ from sqlalchemy.orm import Session
 
 from app.config import settings
 from app.database import get_db
-from app.schemas.auth import LogoutRequest, RefreshRequest, SuccessResponse, TokenResponse
+from app.schemas.auth import (
+    LoginRequest,
+    LogoutRequest,
+    RefreshRequest,
+    SuccessResponse,
+    TokenResponse,
+)
+from app.schemas.family import FamilyCreateResponse
 from app.services.family_service import FamilyService
 
 router = APIRouter(prefix="/api/v1/auth", tags=["auth"])
+
+
+@router.post(
+    "/login",
+    response_model=FamilyCreateResponse,
+    summary="Login",
+    description="Authenticate with family name and password. Returns JWT tokens.",
+)
+async def login(
+    request: LoginRequest,
+    db: Session = Depends(get_db),
+) -> FamilyCreateResponse:
+    """Login with family name and password."""
+    service = FamilyService(db)
+
+    try:
+        result = service.login(name=request.name, password=request.password)
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=str(e),
+        )
+
+    if not result:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid family name or password",
+        )
+
+    family_response, access_token, refresh_token = result
+    return FamilyCreateResponse(
+        id=family_response.id,
+        name=family_response.name,
+        family_size=family_response.family_size,
+        access_token=access_token,
+        refresh_token=refresh_token,
+        token_type="bearer",  # noqa: S106
+        expires_in=settings.jwt_access_token_expire_minutes * 60,
+    )
 
 
 @router.post(
