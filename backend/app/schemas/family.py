@@ -31,6 +31,7 @@ class FamilyCreate(BaseModel):
         max_length=128,
         description="Password (min 8 chars, must include uppercase, lowercase, and digit)",
     )
+    beta_code: str | None = Field(None, max_length=64, description="Beta access code (if required)")
 
     @field_validator("name")
     @classmethod

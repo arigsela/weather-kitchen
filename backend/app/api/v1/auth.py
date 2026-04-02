@@ -31,6 +31,12 @@ async def login(
     db: Session = Depends(get_db),
 ) -> FamilyCreateResponse:
     """Login with family name and password."""
+    if settings.beta_access_code and request.beta_code != settings.beta_access_code:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Invalid beta access code",
+        )
+
     service = FamilyService(db)
 
     try:

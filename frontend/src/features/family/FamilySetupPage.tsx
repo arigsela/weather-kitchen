@@ -38,6 +38,7 @@ export default function FamilySetupPage() {
   const [familyName, setFamilyName] = useState("");
   const [familySize, setFamilySize] = useState(4);
   const [password, setPassword] = useState("");
+  const [betaCode, setBetaCode] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
   // User form
@@ -54,6 +55,7 @@ export default function FamilySetupPage() {
         name: familyName,
         family_size: familySize,
         password,
+        ...(betaCode && { beta_code: betaCode }),
       });
       setTokens(res.access_token, res.refresh_token, res.expires_in);
       setCurrentFamily(res.id);
@@ -167,6 +169,20 @@ export default function FamilySetupPage() {
                 <p className="mt-1 text-xs text-text-muted">
                   At least 8 characters with uppercase, lowercase, and a number.
                 </p>
+              </div>
+
+              <div>
+                <label htmlFor="betaCode" className="mb-1 block text-sm font-medium text-text">
+                  Beta Access Code
+                </label>
+                <input
+                  id="betaCode"
+                  type="text"
+                  value={betaCode}
+                  onChange={(e) => setBetaCode(e.target.value)}
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-text focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  placeholder="Enter beta code"
+                />
               </div>
 
               <Button type="submit" className="w-full" disabled={isLoading}>

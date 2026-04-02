@@ -48,6 +48,12 @@ async def create_family(
     request_id: str = Depends(get_request_id),
 ) -> FamilyCreateResponse:
     """Create a new family account."""
+    if settings.beta_access_code and request.beta_code != settings.beta_access_code:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Invalid beta access code",
+        )
+
     service = FamilyService(db)
     family_response, access_token, refresh_token = service.create_family(
         name=request.name,

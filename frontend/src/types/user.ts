@@ -20,11 +20,13 @@ export interface FamilyCreateRequest {
   name: string;
   family_size: number;
   password: string;
+  beta_code?: string;
 }
 
 export interface LoginRequest {
   name: string;
   password: string;
+  beta_code?: string;
 }
 
 export interface FamilyCreateResponse {
