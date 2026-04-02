@@ -61,6 +61,9 @@ class Settings(BaseSettings):
     jwt_access_token_expire_minutes: int = 15
     jwt_refresh_token_expire_days: int = 7
 
+    # Beta access gate (empty string = disabled, any value = required on login/signup)
+    beta_access_code: str = ""
+
     # Pagination
     pagination_default_limit: int = 20
     pagination_max_limit: int = 100

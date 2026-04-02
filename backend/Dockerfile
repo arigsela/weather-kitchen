@@ -26,7 +26,8 @@ RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
     email-validator==2.3.0 \
     bcrypt==5.0.0 \
     PyJWT==2.9.0 \
-    gunicorn==23.0.0
+    gunicorn==23.0.0 \
+    psycopg2-binary==2.9.10
 
 # Stage 2: Runtime
 FROM python:3.12-slim

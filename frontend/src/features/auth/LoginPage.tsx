@@ -12,6 +12,7 @@ export default function LoginPage() {
 
   const [familyName, setFamilyName] = useState("");
   const [password, setPassword] = useState("");
+  const [betaCode, setBetaCode] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -22,7 +23,11 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      const res = await login({ name: familyName, password });
+      const res = await login({
+        name: familyName,
+        password,
+        ...(betaCode && { beta_code: betaCode }),
+      });
       setTokens(res.access_token, res.refresh_token, res.expires_in);
       setCurrentFamily(res.id);
       setSetupComplete();
@@ -87,6 +92,20 @@ export default function LoginPage() {
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             </div>
+          </div>
+
+          <div>
+            <label htmlFor="betaCode" className="mb-1 block text-sm font-medium text-text">
+              Beta Access Code
+            </label>
+            <input
+              id="betaCode"
+              type="text"
+              value={betaCode}
+              onChange={(e) => setBetaCode(e.target.value)}
+              className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-text focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+              placeholder="Enter beta code"
+            />
           </div>
 
           <Button type="submit" className="w-full" disabled={isLoading}>

@@ -17,6 +17,7 @@ class LoginRequest(BaseModel):
 
     name: str = Field(..., min_length=1, max_length=100, description="Family name")
     password: str = Field(..., min_length=1, max_length=128, description="Password")
+    beta_code: str | None = Field(None, max_length=64, description="Beta access code (if required)")
 
     model_config = ConfigDict(examples=[{"name": "Smith Family", "password": "MySecret1"}])
 
